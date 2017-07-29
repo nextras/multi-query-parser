@@ -6,7 +6,7 @@
 
 namespace NextrasTests\MultiQueryParser;
 
-use Nextras\MultiQueryParser\MultiQueryParser;
+use Nextras\MultiQueryParser\MySqlMultiQueryParser;
 use Tester\Assert;
 use Tester\FileMock;
 use Tester\TestCase;
@@ -22,13 +22,9 @@ class MultiQueryParserTest extends TestCase
 	 */
 	public function testLoadFile($content, array $expectedQueries)
 	{
-		$queries = [];
-		$parser = new MultiQueryParser();
-		$parser->parseFile(FileMock::create($content), MultiQueryParser::DIALECT_PGSQL, function ($sql) use (&$queries) {
-			$queries[] = $sql;
-		});
-
-		Assert::same($expectedQueries, $queries);
+		$parser = new MySqlMultiQueryParser();
+		$actualQueries = iterator_to_array($parser->parseFile(FileMock::create($content)));
+		Assert::same($expectedQueries, $actualQueries);
 	}
 
 
@@ -51,8 +47,8 @@ class MultiQueryParserTest extends TestCase
 				'SELECT 1; SELECT 2;    SELECT 3; ',
 				[
 					'SELECT 1',
-					' SELECT 2',
-					'    SELECT 3',
+					'SELECT 2',
+					'SELECT 3',
 				],
 			],
 			[
@@ -65,8 +61,8 @@ class MultiQueryParserTest extends TestCase
 				]),
 				[
 					'SELECT 1',
-					"\nCREATE TRIGGER `users_bu` BEFORE UPDATE ON `users` FOR EACH ROW BEGIN SELECT 1; END; ",
-					"\nSELECT 2",
+					"CREATE TRIGGER `users_bu` BEFORE UPDATE ON `users` FOR EACH ROW BEGIN SELECT 1; END; ",
+					"SELECT 2",
 				],
 			],
 		];
