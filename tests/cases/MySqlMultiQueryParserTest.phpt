@@ -4,9 +4,8 @@
  * @testCase
  */
 
-namespace NextrasTests\MultiQueryParser;
+namespace Nextras\MultiQueryParser;
 
-use Nextras\MultiQueryParser\MySqlMultiQueryParser;
 use Tester\Assert;
 use Tester\FileMock;
 use Tester\TestCase;
@@ -80,7 +79,7 @@ class MySqlMultiQueryParserTest extends TestCase
 			[
 				"SELECT 1;\n--",
 				[
-					'SELECT 1'
+					'SELECT 1',
 				],
 			],
 			[
@@ -102,7 +101,7 @@ class MySqlMultiQueryParserTest extends TestCase
 				[
 					'SELECT 1',
 					'SELECT 2',
-				]
+				],
 			],
 			[
 				implode("\n", [
@@ -112,7 +111,7 @@ class MySqlMultiQueryParserTest extends TestCase
 				]),
 				[
 					"SELECT 1",
-				]
+				],
 			],
 		];
 	}

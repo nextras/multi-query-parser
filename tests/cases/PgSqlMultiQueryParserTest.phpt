@@ -4,9 +4,8 @@
  * @testCase
  */
 
-namespace NextrasTests\MultiQueryParser;
+namespace Nextras\MultiQueryParser;
 
-use Nextras\MultiQueryParser\MySqlMultiQueryParser;
 use Tester\Assert;
 use Tester\FileMock;
 use Tester\TestCase;
