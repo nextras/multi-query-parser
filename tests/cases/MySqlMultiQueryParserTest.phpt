@@ -65,6 +65,55 @@ class MySqlMultiQueryParserTest extends TestCase
 					"SELECT 2",
 				],
 			],
+			[
+				'-- ',
+				[],
+			],
+			[
+				"--\n",
+				[],
+			],
+			[
+				"--",
+				[],
+			],
+			[
+				"SELECT 1;\n--",
+				[
+					'SELECT 1'
+				],
+			],
+			[
+				"SELECT 1;\n--\nSELECT 2;",
+				[
+					'SELECT 1',
+					'SELECT 2',
+				],
+			],
+			[
+				implode("\n", [
+					'DELIMITER ;;',
+					'SELECT 1;;',
+					'DELIMITER ;',
+					'DELIMITER ;;',
+					'SELECT 2;;',
+					'DELIMITER ;',
+				]),
+				[
+					'SELECT 1',
+					'SELECT 2',
+				]
+			],
+			[
+				implode("\n", [
+					'SELECT 1;',
+					'DELIMITER ;;',
+					'DELIMITER ;',
+				]),
+				[
+					"SELECT 1",
+				]
+			],
 		];
 	}
 }

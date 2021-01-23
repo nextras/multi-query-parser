@@ -45,11 +45,12 @@ class MySqlMultiQueryParser implements IMultiQueryParser
 		$delimiterFirstBytePattern = preg_quote($delimiter[0], '~');
 		$delimiterPattern = preg_quote($delimiter, '~');
 
-		return /** @lang PhpRegExp */ "~
+		return /** @lang PhpRegExp */ "
+		~
 			(?:
 					\\s
-				|   /\\*                                                              (?: [^*]++ | \\*(?!/)        )*+ \\*/
-				|   -- [^\\n]*+
+				|   /\\*  (?: [^*]++ | \\*(?!/) )*+  \\*/
+				|   --[^\\n]*+(?:\\n|\\z)
 			)*+
 
 			(?:
@@ -66,7 +67,7 @@ class MySqlMultiQueryParser implements IMultiQueryParser
 							|   '                                                     (?: \\\\.    | [^']            )*+ '
 							|   \"                                                    (?: \\\\.    | [^\"]           )*+ \"
 							|   /\\*                                                  (?: [^*]++   | \\*(?!/)        )*+ \\*/
-							|   -- [^\\n]*+
+							|   --[^\\n]*+(?:\\n|\\z)
 							|   (?!$delimiterPattern) .
 						)++
 					)
