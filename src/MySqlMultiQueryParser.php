@@ -35,7 +35,7 @@ class MySqlMultiQueryParser implements IMultiQueryParser
 		}
 
 		if ($offset !== strlen($content)) {
-			throw new RuntimeException("Failed to parse migration file '$path'");
+			throw new RuntimeException("Failed to parse file '$path', please report an issue.");
 		}
 	}
 
