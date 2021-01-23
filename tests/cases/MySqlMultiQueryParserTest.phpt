@@ -15,7 +15,7 @@ use Tester\TestCase;
 require_once __DIR__ . '/../bootstrap.php';
 
 
-class MultiQueryParserTest extends TestCase
+class MySqlMultiQueryParserTest extends TestCase
 {
 	/**
 	 * @dataProvider provideLoadFileData
@@ -70,4 +70,4 @@ class MultiQueryParserTest extends TestCase
 }
 
 
-(new MultiQueryParserTest())->run();
+(new MySqlMultiQueryParserTest())->run();

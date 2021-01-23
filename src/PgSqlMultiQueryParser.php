@@ -3,6 +3,10 @@
 namespace Nextras\MultiQueryParser;
 
 use Iterator;
+use Nextras\MultiQueryParser\Exception\RuntimeException;
+use function file_get_contents;
+use function preg_match;
+use function strlen;
 
 
 class PgSqlMultiQueryParser implements IMultiQueryParser
@@ -10,8 +14,8 @@ class PgSqlMultiQueryParser implements IMultiQueryParser
 	public function parseFile(string $path): Iterator
 	{
 		$content = @file_get_contents($path);
-		if ($content === FALSE) {
-			throw new \RuntimeException("Cannot open file '$path'.");
+		if ($content === false) {
+			throw new RuntimeException("Cannot open file '$path'.");
 		}
 
 		$offset = 0;
@@ -22,14 +26,13 @@ class PgSqlMultiQueryParser implements IMultiQueryParser
 
 			if (!empty($match['query'])) {
 				yield $match['query'];
-
 			} else {
 				break;
 			}
 		}
 
 		if ($offset !== strlen($content)) {
-			throw new \RuntimeException("Failed to parse migration file '$path'");
+			throw new RuntimeException("Failed to parse migration file '$path'");
 		}
 	}
 
@@ -39,7 +42,7 @@ class PgSqlMultiQueryParser implements IMultiQueryParser
 		// see https://www.postgresql.org/docs/9.6/static/sql-syntax-lexical.html
 		// assumes standard_conforming_strings = on (default since PostgreSQL 9.1)
 
-		return '~
+		return /** @lang PhpRegExp */ '~
 			(?:
 					\\s
 				|   /\\*                                                            (?: [^*]++   | \\*(?!/)       )*+ \\*/

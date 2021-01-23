@@ -20,10 +20,10 @@
 		"issues": "https://github.com/nextras/multi-query-parser/issues"
 	},
 	"require": {
-		"php": "~7.0"
+		"php": "~7.0 || ~8.0"
 	},
 	"require-dev": {
-		"nette/tester": "~1.7"
+		"nette/tester": "~2.1"
 	},
 	"autoload": {
 		"psr-4": {
