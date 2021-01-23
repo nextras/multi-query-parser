@@ -1,7 +1,7 @@
 {
 	"name": "nextras/multi-query-parser",
 	"type": "library",
-	"description": "Parses queries from SQL file.",
+	"description": "Parses queries from a SQL file.",
 	"keywords": [
 		"parser",
 		"query",
@@ -23,11 +23,16 @@
 		"php": "~7.0 || ~8.0"
 	},
 	"require-dev": {
-		"nette/tester": "~2.1"
+		"nette/tester": "~2.1",
+		"phpstan/phpstan": "0.12.68",
+		"phpstan/phpstan-strict-rules": "0.12.9"
 	},
 	"autoload": {
 		"psr-4": {
 			"Nextras\\MultiQueryParser\\": "src/"
 		}
+	},
+	"scripts": {
+		"phpstan": "phpstan analyze -c .phpstan.neon"
 	}
 }
