@@ -1,9 +1,9 @@
 Nextras Multi Query Parser
 ==========================
 
-[![Build Status](https://travis-ci.org/nextras/multi-query-parser.svg?branch=master)](https://travis-ci.org/nextras/multi-query-parser)
+[![Build Status](https://github.com/nextras/multi-query-parser/workflows/Build/badge.svg?branch=master)](https://github.com/nextras/multi-query-parser/actions?query=workflow%3ABuild+branch%3Amaster)
 [![Downloads this Month](https://img.shields.io/packagist/dm/nextras/multi-query-parser.svg?style=flat)](https://packagist.org/packages/nextras/multi-query-parser)
-[![Stable Version](https://poser.pugx.org/nextras/multi-query-parser/v/stable)](https://packagist.org/packages/nextras/multi-query-parser)
+[![Stable Version](https://img.shields.io/packagist/v/nextras/multi-query-parser.svg?style=flat)](https://packagist.org/packages/nextras/multi-query-parser)
 
 ### Installation
 
@@ -15,4 +15,4 @@ $ composer require nextras/multi-query-parser
 
 ### License
 
-Apache License 2.0. See full [license](license.md).
+MIT. See full [license](license.md).
