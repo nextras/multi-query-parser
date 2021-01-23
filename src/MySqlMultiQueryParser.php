@@ -25,9 +25,9 @@ class MySqlMultiQueryParser implements IMultiQueryParser
 		while (preg_match($pattern, $content, $match, 0, $offset) === 1) {
 			$offset += strlen($match[0]);
 
-			if (!empty($match['delimiter'])) {
+			if (isset($match['delimiter']) && $match['delimiter'] !== '') {
 				$pattern = $this->getQueryPattern($match['delimiter']);
-			} elseif (!empty($match['query'])) {
+			} elseif (isset($match['query']) && $match['query'] !== '') {
 				yield $match['query'];
 			} else {
 				break;

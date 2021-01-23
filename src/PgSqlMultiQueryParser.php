@@ -24,7 +24,7 @@ class PgSqlMultiQueryParser implements IMultiQueryParser
 		while (preg_match($pattern, $content, $match, 0, $offset)) {
 			$offset += strlen($match[0]);
 
-			if (!empty($match['query'])) {
+			if (isset($match['query']) && $match['query'] !== '') {
 				yield $match['query'];
 			} else {
 				break;
