@@ -9,7 +9,7 @@ use function preg_match;
 use function strlen;
 
 
-class PgSqlMultiQueryParser implements IMultiQueryParser
+class PostgreSqlMultiQueryParser implements IMultiQueryParser
 {
 	public function parseFile(string $path): Iterator
 	{
