@@ -24,7 +24,7 @@
 	},
 	"require-dev": {
 		"nette/tester": "~2.1",
-		"phpstan/phpstan": "0.12.97",
+		"phpstan/phpstan": "0.12.99",
 		"phpstan/extension-installer": "1.1.0",
 		"phpstan/phpstan-strict-rules": "0.12.10"
 	},
