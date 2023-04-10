@@ -2,10 +2,9 @@ name: "Build"
 
 on:
   pull_request:
-    types: [ "opened", "synchronize", "edited", "reopened" ]
   push:
     branches:
-      - master
+      - main
       - v*.*
 
 env:
