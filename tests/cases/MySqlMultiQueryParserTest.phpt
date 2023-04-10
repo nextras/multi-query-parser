@@ -17,39 +17,27 @@ require_once __DIR__ . '/../bootstrap.php';
 class MySqlMultiQueryParserTest extends TestCase
 {
 	/**
-	 * @dataProvider provideLoadFileData
+	 * @dataProvider provideDelimitersData
 	 */
-	public function testLoadFile($content, array $expectedQueries)
+	public function testDelimiter($content, array $expectedQueries)
 	{
 		$parser = new MySqlMultiQueryParser();
-		$actualQueries = iterator_to_array($parser->parseFile(FileMock::create($content)));
-		Assert::same($expectedQueries, $actualQueries);
+		$queries = iterator_to_array($parser->parseFile(FileMock::create($content)));
+		Assert::same($expectedQueries, $queries);
 	}
 
 
-	protected function provideLoadFileData()
+	public function testFile()
+	{
+		$parser = new MySqlMultiQueryParser();
+		$queries = iterator_to_array($parser->parseFile(__DIR__ . '/data/mysql.sql'));
+		Assert::count(58, $queries);
+	}
+
+
+	protected function provideDelimitersData()
 	{
 		return [
-			[
-				'SELECT 1',
-				[
-					'SELECT 1',
-				],
-			],
-			[
-				'SELECT 1; ',
-				[
-					'SELECT 1',
-				],
-			],
-			[
-				'SELECT 1; SELECT 2;    SELECT 3; ',
-				[
-					'SELECT 1',
-					'SELECT 2',
-					'SELECT 3',
-				],
-			],
 			[
 				implode("\n", [
 					'SELECT 1;',
