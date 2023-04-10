@@ -20,13 +20,13 @@
 		"issues": "https://github.com/nextras/multi-query-parser/issues"
 	},
 	"require": {
-		"php": "~7.0 || ~8.0"
+		"php": "~7.2 || ~8.0"
 	},
 	"require-dev": {
-		"nette/tester": "~2.1",
-		"phpstan/phpstan": "0.12.99",
-		"phpstan/extension-installer": "1.1.0",
-		"phpstan/phpstan-strict-rules": "0.12.11"
+		"nette/tester": "~2.0",
+		"phpstan/phpstan": "1.10.11",
+		"phpstan/extension-installer": "1.2.0",
+		"phpstan/phpstan-strict-rules": "1.5.1"
 	},
 	"autoload": {
 		"psr-4": {
@@ -34,6 +34,12 @@
 		}
 	},
 	"scripts": {
-		"phpstan": "phpstan analyze -c .phpstan.neon"
+		"phpstan": "phpstan analyze -c .phpstan.neon",
+		"tests": "tester -C ./tests/cases"
+	},
+	"config": {
+		"allow-plugins": {
+			"phpstan/extension-installer": true
+		}
 	}
 }
