@@ -20,7 +20,6 @@ class SqlServerMultiQueryParser implements IMultiQueryParser
 
 		$offset = 0;
 		$pattern = $this->getQueryPattern();
-		var_dump($pattern);
 
 		while (preg_match($pattern, $content, $match, 0, $offset)) {
 			$offset += strlen($match[0]);
