@@ -21,7 +21,7 @@ class PgSqlMultiQueryParserTest extends TestCase
 	 */
 	public function testLoadFile($content, array $expectedQueries)
 	{
-		$parser = new MySqlMultiQueryParser();
+		$parser = new PostgreSqlMultiQueryParser();
 		$actualQueries = iterator_to_array($parser->parseFile(FileMock::create($content)));
 		Assert::same($expectedQueries, $actualQueries);
 	}

@@ -8,7 +8,7 @@ use Iterator;
 interface IMultiQueryParser
 {
 	/**
-	 * @return string[]|Iterator
+	 * @return Iterator<int, string>
 	 */
 	public function parseFile(string $path): Iterator;
 }
