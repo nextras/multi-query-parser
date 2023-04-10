@@ -1,3 +1,7 @@
 /vendor
 /composer.lock
 
+!/.idea
+/.idea/*
+!/.idea/sqldialects.xml
+!/.idea/vcs.xml
