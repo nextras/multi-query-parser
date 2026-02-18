@@ -3,40 +3,27 @@
 namespace Nextras\MultiQueryParser;
 
 use Iterator;
-use Nextras\MultiQueryParser\Exception\RuntimeException;
-use function file_get_contents;
-use function preg_match;
 use function preg_quote;
-use function strlen;
 
 
 class MySqlMultiQueryParser implements IMultiQueryParser
 {
+	use BufferedFileParseTrait;
+
+
 	public function parseFile(string $path): Iterator
 	{
-		$content = @file_get_contents($path);
-		if ($content === false) {
-			throw new RuntimeException("Cannot open file '$path'.");
-		}
-
-		$offset = 0;
-		$pattern = $this->getQueryPattern(';');
-
-		while (preg_match($pattern, $content, $match, 0, $offset) === 1) {
-			$offset += strlen($match[0]);
-
-			if (isset($match['delimiter']) && $match['delimiter'] !== '') {
-				$pattern = $this->getQueryPattern($match['delimiter']);
-			} elseif (isset($match['query']) && $match['query'] !== '') {
-				yield $match['query'];
-			} else {
-				break;
+		return $this->parseFileBuffered(
+			$path,
+			$this->getQueryPattern(';'),
+			function (array $match): array {
+				if (isset($match['delimiter']) && $match['delimiter'] !== '') {
+					return [null, $this->getQueryPattern($match['delimiter'])];
+				}
+				$query = (isset($match['query']) && $match['query'] !== '') ? $match['query'] : null;
+				return [$query, null];
 			}
-		}
-
-		if ($offset !== strlen($content)) {
-			throw new RuntimeException("Failed to parse file '$path', please report an issue.");
-		}
+		);
 	}
 
 
