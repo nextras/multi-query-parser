@@ -20,13 +20,13 @@
 		"issues": "https://github.com/nextras/multi-query-parser/issues"
 	},
 	"require": {
-		"php": "~7.2 || ~8.0"
+		"php": "~8.0"
 	},
 	"require-dev": {
 		"nette/tester": "~2.0",
-		"phpstan/phpstan": "1.12.7",
+		"phpstan/phpstan": "2.1.17",
 		"phpstan/extension-installer": "1.4.3",
-		"phpstan/phpstan-strict-rules": "1.6.1"
+		"phpstan/phpstan-strict-rules": "2.0.4"
 	},
 	"autoload": {
 		"psr-4": {
