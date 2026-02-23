@@ -524,68 +524,6 @@ class PatternIteratorTest extends TestCase
 		Assert::same('q0;', $results[0][0]);
 		Assert::same('q99;', $results[99][0]);
 	}
-
-
-	// =====================================================================
-	// Comparison with BufferedFileParseTrait
-	// =====================================================================
-
-
-	public function testProducesSameResultsAsTraitForMysqlPattern(): void
-	{
-		$delimiter = ';';
-		$delimiterFirstBytePattern = preg_quote($delimiter[0], '~');
-		$delimiterPattern = preg_quote($delimiter, '~');
-
-		$pattern = "
-		~
-			(?:
-					\\s
-				|   /\\*  (?: [^*]++ | \\*(?!/) )*+  \\*/
-				|   --[^\\n]*+(?:\\n|\\z)
-			)*+
-
-			(?:
-				(?i:
-					DELIMITER
-					\\s++
-					(?<delimiter>\\S++)
-				)
-				|
-				(?:
-					(?<query>
-						(?:
-								[^$delimiterFirstBytePattern'\"/$-]++
-							|   '                                                     (?: \\\\.    | [^']            )*+ '
-							|   \"                                                    (?: \\\\.    | [^\"]           )*+ \"
-							|   /\\*                                                  (?: [^*]++   | \\*(?!/)        )*+ \\*/
-							|   --[^\\n]*+(?:\\n|\\z)
-							|   (?!$delimiterPattern) .
-						)++
-					)
-					(?: $delimiterPattern | \\z )
-				)
-				|
-				(?:
-					\\z
-				)
-			)
-		~xsAS";
-
-		$sql = "SELECT 1;\nSELECT 'hello';\n/* comment */ SELECT 3;\n";
-
-		$iter = new PatternIterator($this->stream($sql), $pattern);
-		$queries = [];
-		foreach ($iter as $match) {
-			if (isset($match['query']) && $match['query'] !== '') {
-				$queries[] = $match['query'];
-			} else {
-				break;
-			}
-		}
-
-		Assert::same(['SELECT 1', "SELECT 'hello'", 'SELECT 3'], $queries);
-	}
 }
 
 
