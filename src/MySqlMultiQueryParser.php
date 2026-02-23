@@ -32,7 +32,7 @@ class MySqlMultiQueryParser extends BaseMultiQueryParser
 		~
 			(?:
 					\\s
-				|   /\\*  (?: [^*]++ | \\*(?!/) )*+  \\*/
+				|   /\\*  (?: [^*]++ | \\*(?!/) )*+  (?:\\*/|\\z)
 				|   --[^\\n]*+(?:\\n|\\z)
 			)*+
 
@@ -47,9 +47,9 @@ class MySqlMultiQueryParser extends BaseMultiQueryParser
 					(?<query>
 						(?:
 								[^$delimiterFirstBytePattern'\"/$-]++
-							|   '                                                     (?: \\\\.    | [^']            )*+ '
-							|   \"                                                    (?: \\\\.    | [^\"]           )*+ \"
-							|   /\\*                                                  (?: [^*]++   | \\*(?!/)        )*+ \\*/
+							|   '                                                     (?: \\\\.    | [^']            )*+ (?:'|\\z)
+							|   \"                                                    (?: \\\\.    | [^\"]           )*+ (?:\"|\\z)
+							|   /\\*                                                  (?: [^*]++   | \\*(?!/)        )*+ (?:\\*/|\\z)
 							|   --[^\\n]*+(?:\\n|\\z)
 							|   (?!$delimiterPattern) .
 						)*+

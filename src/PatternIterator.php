@@ -12,6 +12,23 @@ use function substr;
 
 
 /**
+ * Applies a regex pattern to a chunked string stream, yielding matches sequentially.
+ *
+ * Safety mechanism: when a match consumes all remaining data in the buffer and the stream
+ * has more chunks, the match is held back (not yielded) until more data is loaded. This
+ * prevents yielding incomplete matches at chunk boundaries.
+ *
+ * Pattern design constraint: patterns with opening/closing delimiter constructs (such as
+ * string literals `'...'`, block comments `/*...* /`, or dollar-quoted strings `$$...$$`)
+ * must include `\z` as a fallback for the closing delimiter, e.g. `' [^']* (?: ' | \z )`.
+ * Without this, when a chunk boundary falls inside such a construct, the closing delimiter
+ * is absent from the buffer, the construct fails to match, and the regex falls back to a
+ * generic single-character alternative (e.g. `(?!;) .`). This exposes characters inside the
+ * construct (like semicolons inside a string) as false delimiters, producing an incorrect
+ * match that terminates in the middle of the buffer — where the safety mechanism cannot
+ * detect the problem. The `\z` fallback ensures incomplete constructs extend to the end of
+ * the buffer, triggering the safety mechanism to wait for more data.
+ *
  * @implements IteratorAggregate<int, array<mixed>>
  */
 class PatternIterator implements IteratorAggregate
