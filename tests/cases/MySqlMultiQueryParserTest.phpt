@@ -45,7 +45,7 @@ class MySqlMultiQueryParserTest extends TestCase
 	{
 		$parser = new MySqlMultiQueryParser();
 		$queries = iterator_to_array($parser->parseFile(__DIR__ . '/data/mysql.sql'));
-		Assert::count(58, $queries);
+		Assert::count(60, $queries);
 	}
 
 
@@ -289,6 +289,20 @@ class MySqlMultiQueryParserTest extends TestCase
 			// Whitespace variations
 			["SELECT\t1;", ["SELECT\t1"]],
 			["\n\nSELECT 1;\n\n", ["SELECT 1"]],
+
+			// Hash comments (#) — MySQL-specific line comments
+			["# this is a comment\nSELECT 1;", ["SELECT 1"]],
+			["SELECT 1; # comment\nSELECT 2;", ["SELECT 1", "SELECT 2"]],
+			["SELECT 1 # comment with ;\nSELECT 2;", ["SELECT 1 # comment with ;\nSELECT 2"]],
+			["# only a comment", []],
+			["# comment 1\n# comment 2\n", []],
+
+			// Backtick-quoted identifiers protect semicolons
+			["SELECT `col;name` FROM t;", ["SELECT `col;name` FROM t"]],
+			["SELECT `a` FROM t;", ["SELECT `a` FROM t"]],
+
+			// Escaped backticks (doubled) inside backtick identifiers
+			["SELECT `col``name` FROM t;", ["SELECT `col``name` FROM t"]],
 		];
 	}
 
@@ -346,6 +360,16 @@ class MySqlMultiQueryParserTest extends TestCase
 			[
 				["SELECT 'a;b\\'", "c';"],
 				["SELECT 'a;b\\'c'"],
+			],
+			// Hash comment spanning chunks
+			[
+				["SELECT 1; # comment;wi", "th semi\nSELECT 2;"],
+				["SELECT 1", "SELECT 2"],
+			],
+			// Backtick identifier spanning chunks
+			[
+				["SELECT `col;na", "me` FROM t;"],
+				["SELECT `col;name` FROM t"],
 			],
 		];
 	}

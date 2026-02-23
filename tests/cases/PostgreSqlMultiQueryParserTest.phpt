@@ -148,6 +148,11 @@ class PostgreSqlMultiQueryParserTest extends TestCase
 
 			// CRLF line endings
 			["SELECT 1;\r\nSELECT 2;\r\n", ["SELECT 1", "SELECT 2"]],
+
+			// Nested block comments (PostgreSQL supports nesting)
+			["SELECT /* outer /* inner */ still comment */ 1;", ["SELECT /* outer /* inner */ still comment */ 1"]],
+			["/* /* nested */ */ SELECT 1;", ["SELECT 1"]],
+			["SELECT /* a /* b /* c */ c */ a */ 1;", ["SELECT /* a /* b /* c */ c */ a */ 1"]],
 		];
 	}
 
@@ -201,6 +206,11 @@ class PostgreSqlMultiQueryParserTest extends TestCase
 				['SELECT $$a;b', 'c$$;'],
 				['SELECT $$a;bc$$'],
 			],
+			// Nested block comment spanning chunks
+			[
+				["SELECT /* outer /* ;inner", " */ still; */ 1;"],
+				["SELECT /* outer /* ;inner */ still; */ 1"],
+			],
 		];
 	}
 
@@ -209,7 +219,7 @@ class PostgreSqlMultiQueryParserTest extends TestCase
 	{
 		$parser = new PostgreSqlMultiQueryParser();
 		$queries = iterator_to_array($parser->parseFile(__DIR__ . '/data/postgres.sql'));
-		Assert::count(66, $queries);
+		Assert::count(67, $queries);
 		Assert::same("CREATE FUNCTION \"book_collections_before\"() RETURNS TRIGGER AS
 \$BODY$
 BEGIN

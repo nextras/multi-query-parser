@@ -224,3 +224,8 @@ INSERT INTO tag_followers (tag_id, author_id, created_at) VALUES (2, 2, '2014-01
 INSERT INTO contents (id, type, thread_id, replied_at) VALUES (1, 'thread', NULL, NULL);
 INSERT INTO contents (id, type, thread_id, replied_at) VALUES (2, 'comment', 1, '2020-01-01 12:00:00');
 INSERT INTO contents (id, type, thread_id, replied_at) VALUES (3, 'comment', 1, '2020-01-02 12:00:00');
+
+# Hash comment with semicolons; should be ignored; entirely
+SELECT `backtick;identifier` FROM authors WHERE name = 'test';
+# Another hash comment
+SELECT `escaped``backtick` FROM authors;

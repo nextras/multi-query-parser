@@ -24,7 +24,7 @@ class SqlServerMultiQueryParser extends BaseMultiQueryParser
 		$simpleQuery = /** @lang PhpRegExp */ '~
 			(?:
 					\\s
-				|   /\\* (*PRUNE) (?: [^*]++   | \\*(?!/) )*+ \\*/
+				|   /\\* (*PRUNE) (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/
 				|   -- [^\\n]*+
 			)*+
 			(?<simplequery>
@@ -32,7 +32,8 @@ class SqlServerMultiQueryParser extends BaseMultiQueryParser
 						[^;\'"[/-]++
 					|   \' (*PRUNE)                                         (?: [^\']                     )*+ \'
 					|   " (*PRUNE)                                          (?: [^"]                      )*+ "
-					|   /\\* (*PRUNE)                                       (?: [^*]++   | \\*(?!/)       )*+ \\*/
+					|   \\[ (*PRUNE)                                        [^\\]]*+ (?: \\]\\] [^\\]]*+ )* \\]
+					|   /\\* (*PRUNE)                                       (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/
 					|   -- [^\\n]*+
 					|   (?!;) .
 				)++
@@ -40,9 +41,13 @@ class SqlServerMultiQueryParser extends BaseMultiQueryParser
 			;
 		~x';
 		return /** @lang PhpRegExp */ '~
+			(?(DEFINE)
+				(?<nestedBc> /\\* (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/ )
+			)
+
 			(?:
 					\\s
-				|   /\\* (*PRUNE) (?: [^*]++   | \\*(?!/) )*+ \\*/
+				|   /\\* (*PRUNE) (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/
 				|   -- [^\\n]*+
 			)*+
 
@@ -53,7 +58,8 @@ class SqlServerMultiQueryParser extends BaseMultiQueryParser
 							 	[^B;\'"[/-]++
 							|   \' (*PRUNE)                                         (?: [^\']                     )*+ \'
 							|   " (*PRUNE)                                          (?: [^"]                      )*+ "
-							|   /\\* (*PRUNE)                                       (?: [^*]++   | \\*(?!/)       )*+ \\*/
+							|   \\[ (*PRUNE)                                        [^\\]]*+ (?: \\]\\] [^\\]]*+ )* \\]
+							|   /\\* (*PRUNE)                                       (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/
 							|   BEGIN (?: \s*END\s*| ' . substr($simpleQuery, 1, -2) . ')*
 							|   -- [^\\n]*+
 							|   (?!;) .

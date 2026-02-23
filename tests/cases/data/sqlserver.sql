@@ -262,3 +262,7 @@ BEGIN
 END;
 
 INSERT INTO contents (id, type, thread_id, replied_at) VALUES (1, 'thread', NULL, NULL);
+
+/* Nested block comment: outer /* inner; comment */ still outer; */
+SELECT [bracket;identifier] FROM authors;
+SELECT [escaped]]bracket] FROM authors;
