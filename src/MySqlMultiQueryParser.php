@@ -6,24 +6,20 @@ use Iterator;
 use function preg_quote;
 
 
-class MySqlMultiQueryParser implements IMultiQueryParser
+class MySqlMultiQueryParser extends BaseMultiQueryParser
 {
-	use BufferedFileParseTrait;
-
-
-	public function parseFile(string $path): Iterator
+	public function parseStringStream(Iterator $stream): Iterator
 	{
-		return $this->parseFileBuffered(
-			$path,
-			$this->getQueryPattern(';'),
-			function (array $match): array {
-				if (isset($match['delimiter']) && $match['delimiter'] !== '') {
-					return [null, $this->getQueryPattern($match['delimiter'])];
-				}
-				$query = (isset($match['query']) && $match['query'] !== '') ? $match['query'] : null;
-				return [$query, null];
+		$patternIterator = new PatternIterator($stream, $this->getQueryPattern(';'));
+
+		foreach ($patternIterator as $match) {
+			if (isset($match['delimiter']) && $match['delimiter'] !== '') {
+				$patternIterator->setPattern($this->getQueryPattern($match['delimiter']));
+
+			} elseif (isset($match['query']) && $match['query'] !== '') {
+				yield $match['query'];
 			}
-		);
+		}
 	}
 
 

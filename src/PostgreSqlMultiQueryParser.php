@@ -5,21 +5,17 @@ namespace Nextras\MultiQueryParser;
 use Iterator;
 
 
-class PostgreSqlMultiQueryParser implements IMultiQueryParser
+class PostgreSqlMultiQueryParser extends BaseMultiQueryParser
 {
-	use BufferedFileParseTrait;
-
-
-	public function parseFile(string $path): Iterator
+	public function parseStringStream(Iterator $stream): Iterator
 	{
-		return $this->parseFileBuffered(
-			$path,
-			$this->getQueryPattern(),
-			static function (array $match): array {
-				$query = (isset($match['query']) && $match['query'] !== '') ? $match['query'] : null;
-				return [$query, null];
+		$patternIterator = new PatternIterator($stream, $this->getQueryPattern());
+
+		foreach ($patternIterator as $match) {
+			if (isset($match['query']) && $match['query'] !== '') {
+				yield $match['query'];
 			}
-		);
+		}
 	}
 
 

@@ -18,8 +18,9 @@ class MySqlMultiQueryParserTest extends TestCase
 {
 	/**
 	 * @dataProvider provideDelimitersData
+	 * @param list<string> $expectedQueries
 	 */
-	public function testDelimiter($content, array $expectedQueries)
+	public function testDelimiter(string $content, array $expectedQueries): void
 	{
 		$parser = new MySqlMultiQueryParser();
 		$queries = iterator_to_array($parser->parseFile(FileMock::create($content)));
@@ -27,7 +28,7 @@ class MySqlMultiQueryParserTest extends TestCase
 	}
 
 
-	public function testFile()
+	public function testFile(): void
 	{
 		$parser = new MySqlMultiQueryParser();
 		$queries = iterator_to_array($parser->parseFile(__DIR__ . '/data/mysql.sql'));
@@ -35,7 +36,43 @@ class MySqlMultiQueryParserTest extends TestCase
 	}
 
 
-	protected function provideDelimitersData()
+	public function testFileWithRandomizedChunking(): void
+	{
+		$content = file_get_contents(__DIR__ . '/data/mysql.sql');
+		Assert::type('string', $content);
+		assert(is_string($content));
+		$parser = new MySqlMultiQueryParser();
+		$expected = iterator_to_array($parser->parseString($content));
+
+		for ($i = 0; $i < 100; $i++) {
+			$chunks = self::randomChunks($content);
+			$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
+			Assert::same($expected, $queries, "Failed with chunk sizes: " . implode(', ', array_map('strlen', $chunks)));
+		}
+	}
+
+
+	/**
+	 * @return list<string>
+	 */
+	private static function randomChunks(string $s): array
+	{
+		$chunks = [];
+		$offset = 0;
+		$len = strlen($s);
+		while ($offset < $len) {
+			$size = random_int(1, max(1, min(256, $len - $offset)));
+			$chunks[] = substr($s, $offset, $size);
+			$offset += $size;
+		}
+		return $chunks;
+	}
+
+
+	/**
+	 * @return list<array{string, list<string>}>
+	 */
+	protected function provideDelimitersData(): array
 	{
 		return [
 			[
