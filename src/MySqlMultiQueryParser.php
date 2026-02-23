@@ -52,7 +52,7 @@ class MySqlMultiQueryParser extends BaseMultiQueryParser
 							|   /\\*                                                  (?: [^*]++   | \\*(?!/)        )*+ \\*/
 							|   --[^\\n]*+(?:\\n|\\z)
 							|   (?!$delimiterPattern) .
-						)++
+						)*+
 					)
 					(?: $delimiterPattern | \\z )
 				)

@@ -57,7 +57,7 @@ class SqlServerMultiQueryParser extends BaseMultiQueryParser
 							|   BEGIN (?: \s*END\s*| ' . substr($simpleQuery, 1, -2) . ')*
 							|   -- [^\\n]*+
 							|   (?!;) .
-						)++
+						)*+
 					)
 					(?: ; | \\z )
 				)
