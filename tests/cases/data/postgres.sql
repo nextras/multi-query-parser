@@ -252,3 +252,6 @@ ALTER SEQUENCE eans_id_seq RESTART WITH 1;
 ALTER SEQUENCE photo_albums_id_seq RESTART WITH 1;
 ALTER SEQUENCE photos_id_seq RESTART WITH 1;
 ALTER SEQUENCE users_id_seq RESTART WITH 1;
+
+/* Nested block comment: outer /* inner; comment */ still outer; */
+SELECT 1 AS nested_comment_test;

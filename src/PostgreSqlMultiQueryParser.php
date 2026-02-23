@@ -25,9 +25,13 @@ class PostgreSqlMultiQueryParser extends BaseMultiQueryParser
 		// assumes standard_conforming_strings = on (default since PostgreSQL 9.1)
 
 		return /** @lang PhpRegExp */ '~
+			(?(DEFINE)
+				(?<nestedBc> /\\* (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/ )
+			)
+
 			(?:
 					\\s
-				|   /\\* (*PRUNE)                                                   (?: [^*]++   | \\*(?!/)       )*+ \\*/
+				|   /\\* (*PRUNE) (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/
 				|   -- [^\\n]*+
 			)*+
 
@@ -39,7 +43,7 @@ class PostgreSqlMultiQueryParser extends BaseMultiQueryParser
 							|   \' (*PRUNE)                                         (?: [^\']                     )*+ \'
 							|   [eE]\' (*PRUNE)                                     (?: \\\\.    | [^\']          )*+ \'
 							|   " (*PRUNE)                                          (?: [^"]                      )*+ "
-							|   /\\* (*PRUNE)                                       (?: [^*]++   | \\*(?!/)       )*+ \\*/
+							|   /\\* (*PRUNE)                                       (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/
 							|   (\\$(?:[a-zA-Z_\\x80-\\xFF][\\w\\x80-\\xFF]*+)?\\$) (*PRUNE) (?: [^$]++   | (?!\\g{-1})\\$ )*+ \\g{-1}
 							|   -- [^\\n]*+
 							|   (?!;) .

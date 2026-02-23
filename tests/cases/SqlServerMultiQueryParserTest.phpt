@@ -156,6 +156,18 @@ class SqlServerMultiQueryParserTest extends TestCase
 
 			// Bracket-quoted identifiers (basic case without semicolons)
 			['SELECT [column] FROM [table];', ['SELECT [column] FROM [table]']],
+
+			// Bracket-quoted identifiers protect semicolons
+			['SELECT [col;name] FROM t;', ['SELECT [col;name] FROM t']],
+			['SELECT [a;b], [c;d] FROM t;', ['SELECT [a;b], [c;d] FROM t']],
+
+			// Escaped brackets (doubled ]) inside bracket identifiers
+			['SELECT [col]]name] FROM t;', ['SELECT [col]]name] FROM t']],
+
+			// Nested block comments (SQL Server supports nesting)
+			["SELECT /* outer /* inner */ still comment */ 1;", ["SELECT /* outer /* inner */ still comment */ 1"]],
+			["/* /* nested */ */ SELECT 1;", ["SELECT 1"]],
+			["SELECT /* a /* b /* c */ c */ a */ 1;", ["SELECT /* a /* b /* c */ c */ a */ 1"]],
 		];
 	}
 
@@ -164,7 +176,7 @@ class SqlServerMultiQueryParserTest extends TestCase
 	{
 		$parser = new SqlServerMultiQueryParser();
 		$queries = iterator_to_array($parser->parseFile(__DIR__ . '/data/sqlserver.sql'));
-		Assert::count(69, $queries);
+		Assert::count(71, $queries);
 		Assert::same("CREATE TRIGGER mydatabase.trigger_book_stats
 	ON yourtable.books
 	AFTER INSERT, DELETE
@@ -233,6 +245,16 @@ END", $queries[67]);
 			[
 				["BEGIN\n\tSELECT 'a;b", "c';\nEND;"],
 				["BEGIN\n\tSELECT 'a;bc';\nEND"],
+			],
+			// Bracket identifier spanning chunks
+			[
+				["SELECT [col;na", "me] FROM t;"],
+				["SELECT [col;name] FROM t"],
+			],
+			// Nested block comment spanning chunks
+			[
+				["SELECT /* outer /* ;inner", " */ still; */ 1;"],
+				["SELECT /* outer /* ;inner */ still; */ 1"],
 			],
 		];
 	}
