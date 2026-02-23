@@ -5,13 +5,14 @@ namespace Nextras\MultiQueryParser;
 use Iterator;
 use IteratorAggregate;
 use Nextras\MultiQueryParser\Exception\RuntimeException;
+use function preg_last_error_msg;
 use function preg_match;
 use function strlen;
 use function substr;
 
 
 /**
- * @implements IteratorAggregate<int, array<int, string>>
+ * @implements IteratorAggregate<int, array<mixed>>
  */
 class PatternIterator implements IteratorAggregate
 {
@@ -48,7 +49,13 @@ class PatternIterator implements IteratorAggregate
 			$offset = 0;
 
 			while (true) {
-				if (preg_match($this->pattern, $s, $matches, 0, $offset) !== 1) {
+				$result = preg_match($this->pattern, $s, $matches, 0, $offset);
+
+				if ($result === false) {
+					throw new RuntimeException(preg_last_error_msg());
+				}
+
+				if ($result !== 1) {
 					break;
 				}
 

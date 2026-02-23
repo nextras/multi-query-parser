@@ -6,8 +6,8 @@
 
 namespace Nextras\MultiQueryParser;
 
+use LogicException;
 use Tester\Assert;
-use Tester\FileMock;
 use Tester\TestCase;
 
 
@@ -23,7 +23,7 @@ class MySqlMultiQueryParserTest extends TestCase
 	public function testDelimiter(string $content, array $expectedQueries): void
 	{
 		$parser = new MySqlMultiQueryParser();
-		$queries = iterator_to_array($parser->parseFile(FileMock::create($content)));
+		$queries = iterator_to_array($parser->parseString($content));
 		Assert::same($expectedQueries, $queries);
 	}
 
@@ -39,8 +39,11 @@ class MySqlMultiQueryParserTest extends TestCase
 	public function testFileWithRandomizedChunking(): void
 	{
 		$content = file_get_contents(__DIR__ . '/data/mysql.sql');
-		Assert::type('string', $content);
-		assert(is_string($content));
+
+		if ($content === false) {
+			throw new LogicException('Failed to read file content');
+		}
+
 		$parser = new MySqlMultiQueryParser();
 		$expected = iterator_to_array($parser->parseString($content));
 
