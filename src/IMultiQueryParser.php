@@ -3,6 +3,7 @@
 namespace Nextras\MultiQueryParser;
 
 use Iterator;
+use Nextras\MultiQueryParser\Exception\RuntimeException;
 
 
 interface IMultiQueryParser
@@ -13,6 +14,7 @@ interface IMultiQueryParser
 	/**
 	 * @param  positive-int $chunkSize
 	 * @return Iterator<string>
+	 * @throws RuntimeException
 	 */
 	public function parseFile(string $path, int $chunkSize = self::DEFAULT_CHUNK_SIZE): Iterator;
 
@@ -21,12 +23,14 @@ interface IMultiQueryParser
 	 * @param  resource     $fileStream
 	 * @param  positive-int $chunkSize
 	 * @return Iterator<string>
+	 * @throws RuntimeException
 	 */
 	public function parseFileStream($fileStream, int $chunkSize = self::DEFAULT_CHUNK_SIZE): Iterator;
 
 
 	/**
 	 * @return Iterator<string>
+	 * @throws RuntimeException
 	 */
 	public function parseString(string $s): Iterator;
 
@@ -34,6 +38,7 @@ interface IMultiQueryParser
 	/**
 	 * @param  Iterator<string> $stream
 	 * @return Iterator<string>
+	 * @throws RuntimeException
 	 */
 	public function parseStringStream(Iterator $stream): Iterator;
 }
