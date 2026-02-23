@@ -43,7 +43,7 @@ class PostgreSqlMultiQueryParser extends BaseMultiQueryParser
 							|   (\\$(?:[a-zA-Z_\\x80-\\xFF][\\w\\x80-\\xFF]*+)?\\$) (?: [^$]++   | (?!\\g{-1})\\$ )*+ \\g{-1}
 							|   -- [^\\n]*+
 							|   (?!;) .
-						)++
+						)*+
 					)
 					(?: ; | \\z )
 				)

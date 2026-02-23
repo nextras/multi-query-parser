@@ -17,6 +17,18 @@ require_once __DIR__ . '/../bootstrap.php';
 class MySqlMultiQueryParserTest extends TestCase
 {
 	/**
+	 * @dataProvider provideSuperfluousSemicolonsData
+	 * @param list<string> $expectedQueries
+	 */
+	public function testSuperfluousSemicolons(string $content, array $expectedQueries): void
+	{
+		$parser = new MySqlMultiQueryParser();
+		$queries = iterator_to_array($parser->parseString($content));
+		Assert::same($expectedQueries, $queries);
+	}
+
+
+	/**
 	 * @dataProvider provideDelimitersData
 	 * @param list<string> $expectedQueries
 	 */
@@ -69,6 +81,40 @@ class MySqlMultiQueryParserTest extends TestCase
 			$offset += $size;
 		}
 		return $chunks;
+	}
+
+
+	/**
+	 * @return list<array{string, list<string>}>
+	 */
+	protected function provideSuperfluousSemicolonsData(): array
+	{
+		return [
+			[
+				'SELECT 1 AS semicolon_madness;;;',
+				['SELECT 1 AS semicolon_madness'],
+			],
+			[
+				';;',
+				[],
+			],
+			[
+				';;;',
+				[],
+			],
+			[
+				';SELECT 1;',
+				['SELECT 1'],
+			],
+			[
+				'SELECT 1;;SELECT 2;',
+				['SELECT 1', 'SELECT 2'],
+			],
+			[
+				'SELECT 1; ; SELECT 2;',
+				['SELECT 1', 'SELECT 2'],
+			],
+		];
 	}
 
 
