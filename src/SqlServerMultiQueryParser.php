@@ -24,15 +24,15 @@ class SqlServerMultiQueryParser extends BaseMultiQueryParser
 		$simpleQuery = /** @lang PhpRegExp */ '~
 			(?:
 					\\s
-				|   /\\* (?: [^*]++   | \\*(?!/) )*+ \\*/
+				|   /\\* (*PRUNE) (?: [^*]++   | \\*(?!/) )*+ \\*/
 				|   -- [^\\n]*+
 			)*+
 			(?<simplequery>
 				(?:
 						[^;\'"[/-]++
-					|   \'                                                  (?: [^\']                     )*+ \'
-					|   "                                                   (?: [^"]                      )*+ "
-					|   /\\*                                                (?: [^*]++   | \\*(?!/)       )*+ \\*/
+					|   \' (*PRUNE)                                         (?: [^\']                     )*+ \'
+					|   " (*PRUNE)                                          (?: [^"]                      )*+ "
+					|   /\\* (*PRUNE)                                       (?: [^*]++   | \\*(?!/)       )*+ \\*/
 					|   -- [^\\n]*+
 					|   (?!;) .
 				)++
@@ -42,7 +42,7 @@ class SqlServerMultiQueryParser extends BaseMultiQueryParser
 		return /** @lang PhpRegExp */ '~
 			(?:
 					\\s
-				|   /\\* (?: [^*]++   | \\*(?!/) )*+ \\*/
+				|   /\\* (*PRUNE) (?: [^*]++   | \\*(?!/) )*+ \\*/
 				|   -- [^\\n]*+
 			)*+
 
@@ -51,9 +51,9 @@ class SqlServerMultiQueryParser extends BaseMultiQueryParser
 					(?<query>
 						(?:
 							 	[^B;\'"[/-]++
-							|   \'                                                  (?: [^\']                     )*+ \'
-							|   "                                                   (?: [^"]                      )*+ "
-							|   /\\*                                                (?: [^*]++   | \\*(?!/)       )*+ \\*/
+							|   \' (*PRUNE)                                         (?: [^\']                     )*+ \'
+							|   " (*PRUNE)                                          (?: [^"]                      )*+ "
+							|   /\\* (*PRUNE)                                       (?: [^*]++   | \\*(?!/)       )*+ \\*/
 							|   BEGIN (?: \s*END\s*| ' . substr($simpleQuery, 1, -2) . ')*
 							|   -- [^\\n]*+
 							|   (?!;) .
