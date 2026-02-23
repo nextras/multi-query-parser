@@ -15,7 +15,7 @@ require_once __DIR__ . '/../bootstrap.php';
 
 class PostgreSqlMultiQueryParserTest extends TestCase
 {
-	public function testFile()
+	public function testFile(): void
 	{
 		$parser = new PostgreSqlMultiQueryParser();
 		$queries = iterator_to_array($parser->parseFile(__DIR__ . '/data/postgres.sql'));

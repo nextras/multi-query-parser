@@ -3,36 +3,18 @@
 namespace Nextras\MultiQueryParser;
 
 use Iterator;
-use Nextras\MultiQueryParser\Exception\RuntimeException;
-use function file_get_contents;
-use function preg_match;
-use function strlen;
 
 
-class SqlServerMultiQueryParser implements IMultiQueryParser
+class SqlServerMultiQueryParser extends BaseMultiQueryParser
 {
-	public function parseFile(string $path): Iterator
+	public function parseStringStream(Iterator $stream): Iterator
 	{
-		$content = @file_get_contents($path);
-		if ($content === false) {
-			throw new RuntimeException("Cannot open file '$path'.");
-		}
+		$patternIterator = new PatternIterator($stream, $this->getQueryPattern());
 
-		$offset = 0;
-		$pattern = $this->getQueryPattern();
-
-		while (preg_match($pattern, $content, $match, 0, $offset)) {
-			$offset += strlen($match[0]);
-
+		foreach ($patternIterator as $match) {
 			if (isset($match['query']) && $match['query'] !== '') {
 				yield $match['query'];
-			} else {
-				break;
 			}
-		}
-
-		if ($offset !== strlen($content)) {
-			throw new RuntimeException("Failed to parse file '$path', please report an issue.");
 		}
 	}
 

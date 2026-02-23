@@ -34,7 +34,7 @@
 		}
 	},
 	"scripts": {
-		"phpstan": "phpstan analyze -c .phpstan.neon",
+		"phpstan": "phpstan analyze",
 		"tests": "tester -C ./tests/cases"
 	},
 	"config": {

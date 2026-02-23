@@ -15,7 +15,7 @@ require_once __DIR__ . '/../bootstrap.php';
 
 class SqlServerMultiQueryParserTest extends TestCase
 {
-	public function testFile()
+	public function testFile(): void
 	{
 		$parser = new SqlServerMultiQueryParser();
 		$queries = iterator_to_array($parser->parseFile(__DIR__ . '/data/sqlserver.sql'));
