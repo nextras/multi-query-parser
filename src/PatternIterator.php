@@ -20,14 +20,15 @@ use function substr;
  *
  * Pattern design constraint: patterns with opening/closing delimiter constructs (such as
  * string literals `'...'`, block comments `/*...* /`, or dollar-quoted strings `$$...$$`)
- * must include `\z` as a fallback for the closing delimiter, e.g. `' [^']* (?: ' | \z )`.
+ * must include `(*PRUNE)` after the opening delimiter, e.g. `' (*PRUNE) [^']* '`.
  * Without this, when a chunk boundary falls inside such a construct, the closing delimiter
  * is absent from the buffer, the construct fails to match, and the regex falls back to a
  * generic single-character alternative (e.g. `(?!;) .`). This exposes characters inside the
  * construct (like semicolons inside a string) as false delimiters, producing an incorrect
  * match that terminates in the middle of the buffer — where the safety mechanism cannot
- * detect the problem. The `\z` fallback ensures incomplete constructs extend to the end of
- * the buffer, triggering the safety mechanism to wait for more data.
+ * detect the problem. The `(*PRUNE)` verb ensures that once the opening delimiter matches,
+ * the regex engine commits to the construct — if the closing delimiter is missing (because
+ * it is in a later chunk), the overall match fails, causing the iterator to load more data.
  *
  * @implements IteratorAggregate<int, array<mixed>>
  */
