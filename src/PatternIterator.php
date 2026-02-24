@@ -82,7 +82,7 @@ class PatternIterator implements IteratorAggregate
 				}
 
 				if (strlen($matches[0]) === 0) {
-					break 2;
+					break;
 				}
 
 				yield $matches;

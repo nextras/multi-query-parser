@@ -524,6 +524,20 @@ class PatternIteratorTest extends TestCase
 	}
 
 
+	public function testZeroLengthMatchMidBufferLoadsMoreData(): void
+	{
+		// Pattern matches exactly 3 chars, or empty. When only 1 char remains in the
+		// buffer but the stream has more data, the empty match mid-buffer must not abort;
+		// loading the next chunk makes the 3-char alternative succeed.
+		$iter = new PatternIterator($this->stream('abXY', 'Zmore'), '~.{3}|~A');
+		$results = $this->collect($iter);
+		Assert::count(3, $results);
+		Assert::same('abX', $results[0][0]);
+		Assert::same('YZm', $results[1][0]);
+		Assert::same('ore', $results[2][0]);
+	}
+
+
 	public function testZeroLengthMatchAcrossChunks(): void
 	{
 		$pattern = '~\s*(?:(?<query>[^;]+);|\z)~As';
