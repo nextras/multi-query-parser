@@ -23,10 +23,10 @@
 		"php": "~8.0"
 	},
 	"require-dev": {
-		"nette/tester": "~2.0",
-		"phpstan/phpstan": "2.1.17",
+		"nette/tester": "^2.6",
+		"phpstan/phpstan": "2.1.40",
 		"phpstan/extension-installer": "1.4.3",
-		"phpstan/phpstan-strict-rules": "2.0.4"
+		"phpstan/phpstan-strict-rules": "2.0.10"
 	},
 	"autoload": {
 		"psr-4": {
@@ -35,7 +35,7 @@
 	},
 	"scripts": {
 		"phpstan": "phpstan analyze",
-		"tests": "tester -C ./tests/cases"
+		"tests": "tester tests/cases"
 	},
 	"config": {
 		"allow-plugins": {
