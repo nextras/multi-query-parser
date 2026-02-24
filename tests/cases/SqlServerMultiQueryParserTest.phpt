@@ -279,6 +279,26 @@ END", $queries[67]);
 	}
 
 
+	public function testFileWithAllTwoChunkCombinations(): void
+	{
+		$content = file_get_contents(__DIR__ . '/data/sqlserver.sql');
+
+		if ($content === false) {
+			throw new LogicException('Failed to read file content');
+		}
+
+		$parser = new SqlServerMultiQueryParser();
+		$expected = iterator_to_array($parser->parseString($content));
+		$len = strlen($content);
+
+		for ($i = 0; $i <= $len; $i++) {
+			$chunks = [substr($content, 0, $i), substr($content, $i)];
+			$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
+			Assert::same($expected, $queries, "Failed with chunk boundary at offset $i");
+		}
+	}
+
+
 	/**
 	 * @return list<string>
 	 */

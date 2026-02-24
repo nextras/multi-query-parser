@@ -78,6 +78,60 @@ class PatternIteratorTest extends TestCase
 	}
 
 
+	public function testEmptyChunkBeforeData(): void
+	{
+		$iter = new PatternIterator($this->stream('', 'ab;cd;'), '~[^;]+;~A');
+		$results = $this->collect($iter);
+		Assert::count(2, $results);
+		Assert::same('ab;', $results[0][0]);
+		Assert::same('cd;', $results[1][0]);
+	}
+
+
+	public function testEmptyChunkBeforeDataWithZeroLengthPattern(): void
+	{
+		$pattern = '~\s*(?:(?<query>[^;]+);|\z)~As';
+		$iter = new PatternIterator($this->stream('', 'a;b;'), $pattern);
+		$results = $this->collect($iter);
+		Assert::count(2, $results);
+		Assert::same('a', $results[0]['query']);
+		Assert::same('b', $results[1]['query']);
+	}
+
+
+	public function testMultipleEmptyChunksBeforeData(): void
+	{
+		$pattern = '~\s*(?:(?<query>[^;]+);|\z)~As';
+		$iter = new PatternIterator($this->stream('', '', '', 'a;b;'), $pattern);
+		$results = $this->collect($iter);
+		Assert::count(2, $results);
+		Assert::same('a', $results[0]['query']);
+		Assert::same('b', $results[1]['query']);
+	}
+
+
+	public function testEmptyChunksBetweenData(): void
+	{
+		$pattern = '~\s*(?:(?<query>[^;]+);|\z)~As';
+		$iter = new PatternIterator($this->stream('a;', '', '', 'b;'), $pattern);
+		$results = $this->collect($iter);
+		Assert::count(2, $results);
+		Assert::same('a', $results[0]['query']);
+		Assert::same('b', $results[1]['query']);
+	}
+
+
+	public function testEmptyChunkAfterData(): void
+	{
+		$pattern = '~\s*(?:(?<query>[^;]+);|\z)~As';
+		$iter = new PatternIterator($this->stream('a;b;', ''), $pattern);
+		$results = $this->collect($iter);
+		Assert::count(2, $results);
+		Assert::same('a', $results[0]['query']);
+		Assert::same('b', $results[1]['query']);
+	}
+
+
 	// =====================================================================
 	// Single chunk – basic matching
 	// =====================================================================
