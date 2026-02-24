@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
-    <file url="file://$PROJECT_DIR$/tests/cases/data/mysql.sql" dialect="MySQL" />
-    <file url="file://$PROJECT_DIR$/tests/cases/data/postgres.sql" dialect="PostgreSQL" />
-    <file url="file://$PROJECT_DIR$/tests/cases/data/sqlserver.sql" dialect="TSQL" />
+    <file url="file://$PROJECT_DIR$/tests/data/mysql.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/tests/data/postgres.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/tests/data/sqlite.sql" dialect="SQLite" />
+    <file url="file://$PROJECT_DIR$/tests/data/sqlserver.sql" dialect="TSQL" />
   </component>
 </project>
