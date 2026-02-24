@@ -6,26 +6,30 @@
 
 namespace Nextras\MultiQueryParser;
 
-use LogicException;
-use Nextras\MultiQueryParser\Exception\RuntimeException;
 use Tester\Assert;
-use Tester\TestCase;
 
 
 require_once __DIR__ . '/../bootstrap.php';
+require_once __DIR__ . '/../inc/MultiQueryParserTestCase.php';
 
 
-class MySqlMultiQueryParserTest extends TestCase
+class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 {
-	/**
-	 * @dataProvider provideSuperfluousSemicolonsData
-	 * @param list<string> $expectedQueries
-	 */
-	public function testSuperfluousSemicolons(string $content, array $expectedQueries): void
+	protected function createParser(): IMultiQueryParser
 	{
-		$parser = new MySqlMultiQueryParser();
-		$queries = iterator_to_array($parser->parseString($content));
-		Assert::same($expectedQueries, $queries);
+		return new MySqlMultiQueryParser();
+	}
+
+
+	protected function getDataFilePath(): string
+	{
+		return __DIR__ . '/../data/mysql.sql';
+	}
+
+
+	protected function getExpectedFileQueryCount(): int
+	{
+		return 60;
 	}
 
 
@@ -35,73 +39,9 @@ class MySqlMultiQueryParserTest extends TestCase
 	 */
 	public function testDelimiter(string $content, array $expectedQueries): void
 	{
-		$parser = new MySqlMultiQueryParser();
+		$parser = $this->createParser();
 		$queries = iterator_to_array($parser->parseString($content));
 		Assert::same($expectedQueries, $queries);
-	}
-
-
-	public function testFile(): void
-	{
-		$parser = new MySqlMultiQueryParser();
-		$queries = iterator_to_array($parser->parseFile(__DIR__ . '/data/mysql.sql'));
-		Assert::count(60, $queries);
-	}
-
-
-	public function testFileWithRandomizedChunking(): void
-	{
-		$content = file_get_contents(__DIR__ . '/data/mysql.sql');
-
-		if ($content === false) {
-			throw new LogicException('Failed to read file content');
-		}
-
-		$parser = new MySqlMultiQueryParser();
-		$expected = iterator_to_array($parser->parseString($content));
-
-		for ($i = 0; $i < 100; $i++) {
-			$chunks = self::randomChunks($content);
-			$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
-			Assert::same($expected, $queries, "Failed with chunk sizes: " . implode(', ', array_map('strlen', $chunks)));
-		}
-	}
-
-
-	public function testFileWithAllTwoChunkCombinations(): void
-	{
-		$content = file_get_contents(__DIR__ . '/data/mysql.sql');
-
-		if ($content === false) {
-			throw new LogicException('Failed to read file content');
-		}
-
-		$parser = new MySqlMultiQueryParser();
-		$expected = iterator_to_array($parser->parseString($content));
-		$len = strlen($content);
-
-		for ($i = 0; $i <= $len; $i++) {
-			$chunks = [substr($content, 0, $i), substr($content, $i)];
-			$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
-			Assert::same($expected, $queries, "Failed with chunk boundary at offset $i");
-		}
-	}
-
-
-	/**
-	 * @return list<string>
-	 */
-	private static function randomChunks(string $s): array
-	{
-		$chunks = [];
-		$offset = 0;
-		$len = strlen($s);
-		while ($offset < $len) {
-			$size = random_int(1, max(1, min(256, $len - $offset)));
-			$chunks[] = substr($s, $offset, $size);
-			$offset += $size;
-		}
-		return $chunks;
 	}
 
 
@@ -213,27 +153,6 @@ class MySqlMultiQueryParserTest extends TestCase
 
 
 	/**
-	 * @dataProvider provideEdgeCasesData
-	 * @param list<string> $expectedQueries
-	 */
-	public function testEdgeCases(string $content, array $expectedQueries): void
-	{
-		$parser = new MySqlMultiQueryParser();
-		$queries = iterator_to_array($parser->parseString($content));
-		Assert::same($expectedQueries, $queries);
-	}
-
-
-	public function testParseFileThrowsOnNonExistentFile(): void
-	{
-		$parser = new MySqlMultiQueryParser();
-		Assert::exception(function () use ($parser) {
-			$parser->parseFile(__DIR__ . '/data/nonexistent.sql');
-		}, RuntimeException::class);
-	}
-
-
-	/**
 	 * @return list<array{string, list<string>}>
 	 */
 	protected function provideEdgeCasesData(): array
@@ -324,19 +243,6 @@ class MySqlMultiQueryParserTest extends TestCase
 			// Escaped backticks (doubled) inside backtick identifiers
 			["SELECT `col``name` FROM t;", ["SELECT `col``name` FROM t"]],
 		];
-	}
-
-
-	/**
-	 * @dataProvider provideChunkBoundaryData
-	 * @param list<string> $chunks
-	 * @param list<string> $expectedQueries
-	 */
-	public function testChunkBoundary(array $chunks, array $expectedQueries): void
-	{
-		$parser = new MySqlMultiQueryParser();
-		$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
-		Assert::same($expectedQueries, $queries);
 	}
 
 

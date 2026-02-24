@@ -6,25 +6,46 @@
 
 namespace Nextras\MultiQueryParser;
 
-use LogicException;
 use Tester\Assert;
-use Tester\TestCase;
 
 
 require_once __DIR__ . '/../bootstrap.php';
+require_once __DIR__ . '/../inc/MultiQueryParserTestCase.php';
 
 
-class PostgreSqlMultiQueryParserTest extends TestCase
+class PostgreSqlMultiQueryParserTest extends MultiQueryParserTestCase
 {
-	/**
-	 * @dataProvider provideSuperfluousSemicolonsData
-	 * @param list<string> $expectedQueries
-	 */
-	public function testSuperfluousSemicolons(string $content, array $expectedQueries): void
+	protected function createParser(): IMultiQueryParser
 	{
-		$parser = new PostgreSqlMultiQueryParser();
-		$queries = iterator_to_array($parser->parseString($content));
-		Assert::same($expectedQueries, $queries);
+		return new PostgreSqlMultiQueryParser();
+	}
+
+
+	protected function getDataFilePath(): string
+	{
+		return __DIR__ . '/../data/postgres.sql';
+	}
+
+
+	protected function getExpectedFileQueryCount(): int
+	{
+		return 67;
+	}
+
+
+	public function testFile(): void
+	{
+		$parser = $this->createParser();
+		$queries = iterator_to_array($parser->parseFile($this->getDataFilePath()));
+		Assert::count($this->getExpectedFileQueryCount(), $queries);
+		Assert::same("CREATE FUNCTION \"book_collections_before\"() RETURNS TRIGGER AS
+\$BODY$
+BEGIN
+    NEW.\"updated_at\" = NOW();
+    return NEW;
+END;
+\$BODY$
+    LANGUAGE 'plpgsql' VOLATILE", $queries[16]);
 	}
 
 
@@ -59,18 +80,6 @@ class PostgreSqlMultiQueryParserTest extends TestCase
 				['SELECT 1', 'SELECT 2'],
 			],
 		];
-	}
-
-
-	/**
-	 * @dataProvider provideEdgeCasesData
-	 * @param list<string> $expectedQueries
-	 */
-	public function testEdgeCases(string $content, array $expectedQueries): void
-	{
-		$parser = new PostgreSqlMultiQueryParser();
-		$queries = iterator_to_array($parser->parseString($content));
-		Assert::same($expectedQueries, $queries);
 	}
 
 
@@ -158,19 +167,6 @@ class PostgreSqlMultiQueryParserTest extends TestCase
 
 
 	/**
-	 * @dataProvider provideChunkBoundaryData
-	 * @param list<string> $chunks
-	 * @param list<string> $expectedQueries
-	 */
-	public function testChunkBoundary(array $chunks, array $expectedQueries): void
-	{
-		$parser = new PostgreSqlMultiQueryParser();
-		$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
-		Assert::same($expectedQueries, $queries);
-	}
-
-
-	/**
 	 * @return list<array{list<string>, list<string>}>
 	 */
 	protected function provideChunkBoundaryData(): array
@@ -212,78 +208,6 @@ class PostgreSqlMultiQueryParserTest extends TestCase
 				["SELECT /* outer /* ;inner */ still; */ 1"],
 			],
 		];
-	}
-
-
-	public function testFile(): void
-	{
-		$parser = new PostgreSqlMultiQueryParser();
-		$queries = iterator_to_array($parser->parseFile(__DIR__ . '/data/postgres.sql'));
-		Assert::count(67, $queries);
-		Assert::same("CREATE FUNCTION \"book_collections_before\"() RETURNS TRIGGER AS
-\$BODY$
-BEGIN
-    NEW.\"updated_at\" = NOW();
-    return NEW;
-END;
-\$BODY$
-    LANGUAGE 'plpgsql' VOLATILE", $queries[16]);
-	}
-
-
-	public function testFileWithRandomizedChunking(): void
-	{
-		$content = file_get_contents(__DIR__ . '/data/postgres.sql');
-
-		if ($content === false) {
-			throw new LogicException('Failed to read file content');
-		}
-
-		$parser = new PostgreSqlMultiQueryParser();
-		$expected = iterator_to_array($parser->parseString($content));
-
-		for ($i = 0; $i < 100; $i++) {
-			$chunks = self::randomChunks($content);
-			$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
-			Assert::same($expected, $queries, "Failed with chunk sizes: " . implode(', ', array_map('strlen', $chunks)));
-		}
-	}
-
-
-	public function testFileWithAllTwoChunkCombinations(): void
-	{
-		$content = file_get_contents(__DIR__ . '/data/postgres.sql');
-
-		if ($content === false) {
-			throw new LogicException('Failed to read file content');
-		}
-
-		$parser = new PostgreSqlMultiQueryParser();
-		$expected = iterator_to_array($parser->parseString($content));
-		$len = strlen($content);
-
-		for ($i = 0; $i <= $len; $i++) {
-			$chunks = [substr($content, 0, $i), substr($content, $i)];
-			$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
-			Assert::same($expected, $queries, "Failed with chunk boundary at offset $i");
-		}
-	}
-
-
-	/**
-	 * @return list<string>
-	 */
-	private static function randomChunks(string $s): array
-	{
-		$chunks = [];
-		$offset = 0;
-		$len = strlen($s);
-		while ($offset < $len) {
-			$size = random_int(1, max(1, min(256, $len - $offset)));
-			$chunks[] = substr($s, $offset, $size);
-			$offset += $size;
-		}
-		return $chunks;
 	}
 }
 

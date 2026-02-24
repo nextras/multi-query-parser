@@ -6,25 +6,60 @@
 
 namespace Nextras\MultiQueryParser;
 
-use LogicException;
 use Tester\Assert;
-use Tester\TestCase;
 
 
 require_once __DIR__ . '/../bootstrap.php';
+require_once __DIR__ . '/../inc/MultiQueryParserTestCase.php';
 
 
-class SqlServerMultiQueryParserTest extends TestCase
+class SqlServerMultiQueryParserTest extends MultiQueryParserTestCase
 {
-	/**
-	 * @dataProvider provideSuperfluousSemicolonsData
-	 * @param list<string> $expectedQueries
-	 */
-	public function testSuperfluousSemicolons(string $content, array $expectedQueries): void
+	protected function createParser(): IMultiQueryParser
 	{
-		$parser = new SqlServerMultiQueryParser();
-		$queries = iterator_to_array($parser->parseString($content));
-		Assert::same($expectedQueries, $queries);
+		return new SqlServerMultiQueryParser();
+	}
+
+
+	protected function getDataFilePath(): string
+	{
+		return __DIR__ . '/../data/sqlserver.sql';
+	}
+
+
+	protected function getExpectedFileQueryCount(): int
+	{
+		return 71;
+	}
+
+
+	public function testFile(): void
+	{
+		$parser = $this->createParser();
+		$queries = iterator_to_array($parser->parseFile($this->getDataFilePath()));
+		Assert::count($this->getExpectedFileQueryCount(), $queries);
+		Assert::same("CREATE TRIGGER mydatabase.trigger_book_stats
+	ON yourtable.books
+	AFTER INSERT, DELETE
+	AS
+BEGIN
+	SET NOCOUNT ON;
+	INSERT INTO yourtable.book_stats(
+		book_id,
+		string_value
+	)
+	SELECT
+		i.book_id,
+		'INS'
+	FROM
+		inserted i
+	UNION ALL
+	SELECT
+		d.book_id,
+		'DEL'
+	FROM
+		deleted d;
+END", $queries[67]);
 	}
 
 
@@ -59,18 +94,6 @@ class SqlServerMultiQueryParserTest extends TestCase
 				['SELECT 1', 'SELECT 2'],
 			],
 		];
-	}
-
-
-	/**
-	 * @dataProvider provideEdgeCasesData
-	 * @param list<string> $expectedQueries
-	 */
-	public function testEdgeCases(string $content, array $expectedQueries): void
-	{
-		$parser = new SqlServerMultiQueryParser();
-		$queries = iterator_to_array($parser->parseString($content));
-		Assert::same($expectedQueries, $queries);
 	}
 
 
@@ -172,49 +195,6 @@ class SqlServerMultiQueryParserTest extends TestCase
 	}
 
 
-	public function testFile(): void
-	{
-		$parser = new SqlServerMultiQueryParser();
-		$queries = iterator_to_array($parser->parseFile(__DIR__ . '/data/sqlserver.sql'));
-		Assert::count(71, $queries);
-		Assert::same("CREATE TRIGGER mydatabase.trigger_book_stats
-	ON yourtable.books
-	AFTER INSERT, DELETE
-	AS
-BEGIN
-	SET NOCOUNT ON;
-	INSERT INTO yourtable.book_stats(
-		book_id,
-		string_value
-	)
-	SELECT
-		i.book_id,
-		'INS'
-	FROM
-		inserted i
-	UNION ALL
-	SELECT
-		d.book_id,
-		'DEL'
-	FROM
-		deleted d;
-END", $queries[67]);
-	}
-
-
-	/**
-	 * @dataProvider provideChunkBoundaryData
-	 * @param list<string> $chunks
-	 * @param list<string> $expectedQueries
-	 */
-	public function testChunkBoundary(array $chunks, array $expectedQueries): void
-	{
-		$parser = new SqlServerMultiQueryParser();
-		$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
-		Assert::same($expectedQueries, $queries);
-	}
-
-
 	/**
 	 * @return list<array{list<string>, list<string>}>
 	 */
@@ -257,62 +237,6 @@ END", $queries[67]);
 				["SELECT /* outer /* ;inner */ still; */ 1"],
 			],
 		];
-	}
-
-
-	public function testFileWithRandomizedChunking(): void
-	{
-		$content = file_get_contents(__DIR__ . '/data/sqlserver.sql');
-
-		if ($content === false) {
-			throw new LogicException('Failed to read file content');
-		}
-
-		$parser = new SqlServerMultiQueryParser();
-		$expected = iterator_to_array($parser->parseString($content));
-
-		for ($i = 0; $i < 100; $i++) {
-			$chunks = self::randomChunks($content);
-			$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
-			Assert::same($expected, $queries, "Failed with chunk sizes: " . implode(', ', array_map('strlen', $chunks)));
-		}
-	}
-
-
-	public function testFileWithAllTwoChunkCombinations(): void
-	{
-		$content = file_get_contents(__DIR__ . '/data/sqlserver.sql');
-
-		if ($content === false) {
-			throw new LogicException('Failed to read file content');
-		}
-
-		$parser = new SqlServerMultiQueryParser();
-		$expected = iterator_to_array($parser->parseString($content));
-		$len = strlen($content);
-
-		for ($i = 0; $i <= $len; $i++) {
-			$chunks = [substr($content, 0, $i), substr($content, $i)];
-			$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
-			Assert::same($expected, $queries, "Failed with chunk boundary at offset $i");
-		}
-	}
-
-
-	/**
-	 * @return list<string>
-	 */
-	private static function randomChunks(string $s): array
-	{
-		$chunks = [];
-		$offset = 0;
-		$len = strlen($s);
-		while ($offset < $len) {
-			$size = random_int(1, max(1, min(256, $len - $offset)));
-			$chunks[] = substr($s, $offset, $size);
-			$offset += $size;
-		}
-		return $chunks;
 	}
 }
 
