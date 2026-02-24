@@ -52,6 +52,7 @@ class MySqlMultiQueryParser extends BaseMultiQueryParser
 							|   \" (*PRUNE)                                           (?: \\\\.    | [^\"]           )*+ \"
 							|   \` (*PRUNE)                                           (?: [^\`]++  | \`\`            )*+ \`
 							|   /\\* (*PRUNE)                                         (?: [^*]++   | \\*(?!/)        )*+ \\*/
+							|   (?!$delimiterPattern) (\\$(?:[a-zA-Z_\\x80-\\xFF][\\w\\x80-\\xFF]*+)?\\$) (*PRUNE) (?: [^$]++   | (?!\\g{-1})\\$ )*+ \\g{-1}
 							|   --[^\\n]*+(?:\\n|\\z)
 							|   \\#[^\\n]*+(?:\\n|\\z)
 							|   (?!$delimiterPattern) .

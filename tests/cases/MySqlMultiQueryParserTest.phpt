@@ -29,7 +29,7 @@ class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 
 	protected function getExpectedFileQueryCount(): int
 	{
-		return 60;
+		return 61;
 	}
 
 
@@ -148,6 +148,21 @@ class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 					"SELECT 1",
 				],
 			],
+			// DELIMITER $$ with $mle$ dollar-quoted body
+			[
+				implode("\n", [
+					'SELECT 1;',
+					'DELIMITER $$',
+					'CREATE FUNCTION gcd(a INT, b INT) RETURNS INT NO SQL LANGUAGE JAVASCRIPT AS $mle$ let x = a; let y = b; $mle$$$',
+					'DELIMITER ;',
+					'SELECT 2;',
+				]),
+				[
+					'SELECT 1',
+					'CREATE FUNCTION gcd(a INT, b INT) RETURNS INT NO SQL LANGUAGE JAVASCRIPT AS $mle$ let x = a; let y = b; $mle$',
+					'SELECT 2',
+				],
+			],
 		];
 	}
 
@@ -242,6 +257,21 @@ class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 
 			// Escaped backticks (doubled) inside backtick identifiers
 			["SELECT `col``name` FROM t;", ["SELECT `col``name` FROM t"]],
+
+			// Dollar-quoted strings in JavaScript stored programs
+			[
+				'CREATE FUNCTION gcd(a INT, b INT) RETURNS INT NO SQL LANGUAGE JAVASCRIPT AS $mle$ let x = a; let y = b; $mle$;',
+				['CREATE FUNCTION gcd(a INT, b INT) RETURNS INT NO SQL LANGUAGE JAVASCRIPT AS $mle$ let x = a; let y = b; $mle$'],
+			],
+			[
+				'CREATE FUNCTION js_add(a INT, b INT) RETURNS INT LANGUAGE JAVASCRIPT AS $$ return a + b; $$;',
+				['CREATE FUNCTION js_add(a INT, b INT) RETURNS INT LANGUAGE JAVASCRIPT AS $$ return a + b; $$'],
+			],
+			// Nested dollar-quoted strings with different tags
+			[
+				'CREATE FUNCTION nested() RETURNS INT LANGUAGE JAVASCRIPT AS $mle$ let s = $inner$;$inner$; return 1; $mle$;',
+				['CREATE FUNCTION nested() RETURNS INT LANGUAGE JAVASCRIPT AS $mle$ let s = $inner$;$inner$; return 1; $mle$'],
+			],
 		];
 	}
 
@@ -296,6 +326,11 @@ class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 			[
 				["SELECT `col;na", "me` FROM t;"],
 				["SELECT `col;name` FROM t"],
+			],
+			// Dollar-quoted string spanning chunks
+			[
+				['CREATE FUNCTION f() RETURNS INT LANGUAGE JAVASCRIPT AS $mle$ let x = 1;', ' return x; $mle$;'],
+				['CREATE FUNCTION f() RETURNS INT LANGUAGE JAVASCRIPT AS $mle$ let x = 1; return x; $mle$'],
 			],
 		];
 	}
