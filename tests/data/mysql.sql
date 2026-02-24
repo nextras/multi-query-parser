@@ -225,6 +225,21 @@ INSERT INTO contents (id, type, thread_id, replied_at) VALUES (1, 'thread', NULL
 INSERT INTO contents (id, type, thread_id, replied_at) VALUES (2, 'comment', 1, '2020-01-01 12:00:00');
 INSERT INTO contents (id, type, thread_id, replied_at) VALUES (3, 'comment', 1, '2020-01-02 12:00:00');
 
+CREATE FUNCTION gcd(a INT, b INT)
+	RETURNS INT
+	NO SQL
+	LANGUAGE JAVASCRIPT AS
+$mle$
+	let x = Math.abs(a);
+	let y = Math.abs(b);
+	while (y) {
+		var t = y;
+		y = x % y;
+		x = t;
+	}
+	return x;
+$mle$;
+
 # Hash comment with semicolons; should be ignored; entirely
 SELECT `backtick;identifier` FROM authors WHERE name = 'test';
 # Another hash comment
