@@ -77,12 +77,12 @@ class PatternIterator implements IteratorAggregate
 					break;
 				}
 
-				if (strlen($matches[0]) === 0) {
-					break 2;
-				}
-
 				if (strlen($matches[0]) + $offset === strlen($s) && $this->stream->valid()) {
 					break;
+				}
+
+				if (strlen($matches[0]) === 0) {
+					break 2;
 				}
 
 				yield $matches;
