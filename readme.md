@@ -12,6 +12,7 @@ A streaming PHP parser for splitting multi-query SQL files into individual state
 - **MySQL** -- backtick identifiers, `DELIMITER` command, `#` comments
 - **PostgreSQL** -- dollar-quoted strings (`$BODY$...$BODY$`), `E'...'` escape strings
 - **SQL Server** -- `[bracketed]` identifiers, `BEGIN...END` blocks
+- **SQLite** -- all three identifier styles (`"double"`, `` `backtick` ``, `[bracket]`), `BEGIN...END` blocks for triggers
 
 All parsers handle standard SQL comments (`--`, `/* */`), quoted strings, and semicolon delimiters.
 
@@ -57,7 +58,7 @@ foreach ($parser->parseFileStream($stream) as $query) {
 }
 ```
 
-Available parsers: `MySqlMultiQueryParser`, `PostgreSqlMultiQueryParser`, `SqlServerMultiQueryParser`.
+Available parsers: `MySqlMultiQueryParser`, `PostgreSqlMultiQueryParser`, `SqlServerMultiQueryParser`, `SqliteMultiQueryParser`.
 
 ### License
 
