@@ -21,45 +21,54 @@ class SqliteMultiQueryParser extends BaseMultiQueryParser
 
 	private function getQueryPattern(): string
 	{
-		$simpleQuery = /** @lang PhpRegExp */ '~
-			(?:
-					\s
-				|   /\* (*PRUNE) (?: [^*]++ | \*(?!/) )*+ \*/
-				|   -- [^\n]*+
-			)*+
-			(?<simplequery>
-				(?:
-						[^;\'"`[/-]++
-					|   \' (*PRUNE)                                         (?: \'\' | [^\'] )*+ \'
-					|   " (*PRUNE)                                          (?: "" | [^"] )*+ "
-					|   ` (*PRUNE)                                          (?: `` | [^`] )*+ `
-					|   \[ (*PRUNE)                                         [^\]]*+ (?: \]\] [^\]]*+ )* \]
-					|   /\* (*PRUNE)                                        (?: [^*]++ | \*(?!/) )*+ \*/
-					|   -- [^\n]*+
-					|   (?!;) .
-				)++
-			)
-			;
-		~x';
+		// (*PRUNE) must appear inline (not inside DEFINE subroutines) because PCRE confines
+		// backtracking verbs to the subroutine scope. The inner bodies are defined once in
+		// DEFINE and referenced after the inline (*PRUNE) to avoid pattern duplication.
 		return /** @lang PhpRegExp */ '~
-			(?:
-					\s
-				|   /\* (*PRUNE) (?: [^*]++ | \*(?!/) )*+ \*/
-				|   -- [^\n]*+
-			)*+
+			(?(DEFINE)
+				(?<sqI>  (?: \'\' | [^\'] )*+ \' )
+				(?<dqI>  (?: "" | [^"] )*+ " )
+				(?<btI>  (?: `` | [^`] )*+ ` )
+				(?<bkI>  [^\]]*+ (?: \]\] [^\]]*+ )* \] )
+				(?<bcI>  (?: [^*]++ | \*(?!/) )*+ \*/ )
+				(?<lc>   -- [^\n]*+ )
+				(?<skip>
+					(?:
+							\s
+						|   /\* (*PRUNE) (?&bcI)
+						|   (?&lc)
+					)*+
+				)
+				(?<stmt>
+					(?&skip)
+					(?:
+							[^;\'"`[/-]++
+						|   \' (*PRUNE) (?&sqI)
+						|   " (*PRUNE) (?&dqI)
+						|   ` (*PRUNE) (?&btI)
+						|   \[ (*PRUNE) (?&bkI)
+						|   /\* (*PRUNE) (?&bcI)
+						|   (?&lc)
+						|   (?!;) .
+					)++
+					;
+				)
+			)
+
+			(?&skip)
 
 			(?:
 				(?:
 					(?<query>
 						(?:
 							 	[^bB;\'"`[/-]++
-							|   \' (*PRUNE)                                         (?: \'\' | [^\'] )*+ \'
-							|   " (*PRUNE)                                          (?: "" | [^"] )*+ "
-							|   ` (*PRUNE)                                          (?: `` | [^`] )*+ `
-							|   \[ (*PRUNE)                                         [^\]]*+ (?: \]\] [^\]]*+ )* \]
-							|   /\* (*PRUNE)                                        (?: [^*]++ | \*(?!/) )*+ \*/
-							|   (?i:BEGIN) (?!\s*(?:(?i:TRANSACTION|DEFERRED|IMMEDIATE|EXCLUSIVE)\b|;|\z)) (*PRUNE) (?: (?i:\s*END)\s*| ' . substr($simpleQuery, 1, -2) . ')*
-							|   -- [^\n]*+
+							|   \' (*PRUNE) (?&sqI)
+							|   " (*PRUNE) (?&dqI)
+							|   ` (*PRUNE) (?&btI)
+							|   \[ (*PRUNE) (?&bkI)
+							|   /\* (*PRUNE) (?&bcI)
+							|   (?i:BEGIN) (?!\s*(?:(?i:TRANSACTION|DEFERRED|IMMEDIATE|EXCLUSIVE)\b|;|\z)) (*PRUNE) (?: (?i:\s*END)\s* | (?&stmt) )*
+							|   (?&lc)
 							|   (?!;) .
 						)*+
 					)
