@@ -5,7 +5,7 @@ Nextras Multi Query Parser
 [![Downloads this Month](https://img.shields.io/packagist/dm/nextras/multi-query-parser.svg?style=flat)](https://packagist.org/packages/nextras/multi-query-parser)
 [![Stable Version](https://img.shields.io/packagist/v/nextras/multi-query-parser.svg?style=flat)](https://packagist.org/packages/nextras/multi-query-parser)
 
-A PHP library for splitting multi-query SQL files into individual statements. Handles database-specific syntax like custom delimiters, dollar-quoted strings, and `BEGIN...END` blocks. Processes files in chunks for memory efficiency.
+A streaming PHP parser for splitting multi-query SQL files into individual statements. Handles database-specific syntax like custom delimiters, dollar-quoted strings, and `BEGIN...END` blocks. The parser reads input in small chunks and yields statements one by one -- it never loads the entire file into memory, making it suitable for large SQL dumps.
 
 ### Supported Databases
 
