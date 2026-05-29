@@ -69,17 +69,15 @@ abstract class BaseMultiQueryParser implements IMultiQueryParser
 	/**
 	 * Builds the yielded query string, prepending captured leading comments when enabled.
 	 *
-	 * @param array<mixed> $match
+	 * @param array<array-key, string> $match
 	 */
 	protected function buildQuery(array $match): string
 	{
-		$query = (string) $match['query'];
-
 		if (!$this->preserveLeadingComments) {
-			return $query;
+			return $match['query'];
 		}
 
-		return (string) ($match['leadingComments'] ?? '') . $query;
+		return ($match['leadingComments'] ?? '') . $match['query'];
 	}
 
 
