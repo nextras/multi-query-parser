@@ -18,7 +18,7 @@ abstract class BaseMultiQueryParser implements IMultiQueryParser
 	 *                                       leading whitespace is stripped.
 	 */
 	public function __construct(
-		protected bool $preserveLeadingComments = false,
+		private bool $preserveLeadingComments = false,
 	) {
 	}
 
