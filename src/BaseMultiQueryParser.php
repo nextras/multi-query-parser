@@ -12,11 +12,6 @@ use function fread;
 
 abstract class BaseMultiQueryParser implements IMultiQueryParser
 {
-	/**
-	 * @param bool $preserveLeadingComments When true, comments preceding a query are kept as a prefix of
-	 *                                       the yielded query string instead of being stripped. Only pure
-	 *                                       leading whitespace is stripped.
-	 */
 	public function __construct(
 		private bool $preserveLeadingComments = false,
 	) {
