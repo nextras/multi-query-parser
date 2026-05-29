@@ -46,6 +46,114 @@ class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 
 
 	/**
+	 * @dataProvider providePreserveLeadingCommentsData
+	 * @param list<string> $expectedQueries
+	 */
+	public function testPreserveLeadingComments(string $content, array $expectedQueries): void
+	{
+		$parser = new MySqlMultiQueryParser(preserveLeadingComments: true);
+		$queries = iterator_to_array($parser->parseString($content));
+		Assert::same($expectedQueries, $queries);
+	}
+
+
+	/**
+	 * The restructured leading-comment pattern must keep streaming chunk-safe.
+	 * Every two-chunk split of the input must reproduce the whole-string result.
+	 */
+	public function testPreserveLeadingCommentsChunkBoundary(): void
+	{
+		$parser = new MySqlMultiQueryParser(preserveLeadingComments: true);
+		$content = implode("\n", [
+			'-- header comment',
+			'-- second line',
+			'SELECT 1;',
+			'',
+			'# hash note',
+			'SELECT 2;',
+			'/* block ; with semi */',
+			'SELECT 3;',
+			'SELECT 4; -- trailing',
+			'-- leading before 5',
+			'SELECT 5;',
+		]);
+
+		$expected = iterator_to_array($parser->parseString($content));
+		$len = strlen($content);
+
+		for ($i = 0; $i <= $len; $i++) {
+			$chunks = [substr($content, 0, $i), substr($content, $i)];
+			$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
+			Assert::same($expected, $queries, "Failed with chunk boundary at offset $i");
+		}
+	}
+
+
+	/**
+	 * @return list<array{string, list<string>}>
+	 */
+	protected function providePreserveLeadingCommentsData(): array
+	{
+		return [
+			// Single -- comment kept as a prefix of the following query
+			[
+				"-- add users table\nCREATE TABLE users (id INT);",
+				["-- add users table\nCREATE TABLE users (id INT)"],
+			],
+			// Multiple consecutive -- comment lines
+			[
+				"-- line 1\n-- line 2\nSELECT 1;",
+				["-- line 1\n-- line 2\nSELECT 1"],
+			],
+			// Each query keeps only its own leading comment
+			[
+				"-- first\nSELECT 1;\n-- second\nSELECT 2;",
+				["-- first\nSELECT 1", "-- second\nSELECT 2"],
+			],
+			// A comment between two queries attaches to the following query
+			[
+				"SELECT 1; -- between\nSELECT 2;",
+				["SELECT 1", "-- between\nSELECT 2"],
+			],
+			// # hash comments are preserved too
+			[
+				"# hash note\nSELECT 1;",
+				["# hash note\nSELECT 1"],
+			],
+			// /* */ block comments are preserved too
+			[
+				"/* block */ SELECT 1;",
+				["/* block */ SELECT 1"],
+			],
+			// Mixed comment types are preserved with their original formatting
+			[
+				"-- a\n# b\n/* c */\nSELECT 1;",
+				["-- a\n# b\n/* c */\nSELECT 1"],
+			],
+			// Pure leading whitespace / blank lines before the comment are stripped
+			[
+				"\n\n-- spaced\n\nSELECT 1;",
+				["-- spaced\n\nSELECT 1"],
+			],
+			// Comment-only input yields nothing (no query to attach to)
+			["-- only a comment", []],
+			["-- line 1\n-- line 2\n", []],
+			["/* only a block */", []],
+			// A trailing comment after the last query (no following query) is dropped
+			[
+				"SELECT 1;\n-- trailing",
+				["SELECT 1"],
+			],
+			// Pure whitespace produces no leading prefix
+			[
+				"\n\nSELECT 1;\n\n",
+				["SELECT 1"],
+			],
+		];
+	}
+
+
+	/**
 	 * @return list<array{string, list<string>}>
 	 */
 	protected function provideSuperfluousSemicolonsData(): array

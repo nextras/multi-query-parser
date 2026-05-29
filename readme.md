@@ -60,6 +60,22 @@ foreach ($parser->parseFileStream($stream) as $query) {
 
 Available parsers: `MySqlMultiQueryParser`, `PostgreSqlMultiQueryParser`, `SqlServerMultiQueryParser`, `SqliteMultiQueryParser`.
 
+**Preserve leading comments (MySQL):**
+
+By default, comments preceding a query are stripped. Pass `preserveLeadingComments: true` to keep them as a prefix of the yielded query instead -- useful when comments carry meaningful annotations:
+
+```php
+$parser = new MySqlMultiQueryParser(preserveLeadingComments: true);
+
+$sql = "-- create the users table\nCREATE TABLE users (id INT);";
+
+foreach ($parser->parseString($sql) as $query) {
+    echo $query; // "-- create the users table\nCREATE TABLE users (id INT)"
+}
+```
+
+All comment styles (`--`, `#`, `/* */`) that directly precede a query are preserved with their original formatting; only pure leading whitespace is stripped. A comment that sits between two queries is treated as preceding the following one. Comments not followed by any query (e.g. a trailing comment at the end of input) are dropped.
+
 ### License
 
 MIT. See full [license](license.md).

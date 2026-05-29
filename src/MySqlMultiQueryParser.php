@@ -8,6 +8,17 @@ use function preg_quote;
 
 class MySqlMultiQueryParser extends BaseMultiQueryParser
 {
+	/**
+	 * @param bool $preserveLeadingComments When true, comments (`--`, `#`, `/* *​/`) that precede a query
+	 *                                       are kept as a prefix of the yielded query string instead of
+	 *                                       being stripped. Only pure leading whitespace is stripped.
+	 */
+	public function __construct(
+		private bool $preserveLeadingComments = false,
+	) {
+	}
+
+
 	public function parseStringStream(Iterator $stream): Iterator
 	{
 		$patternIterator = new PatternIterator($stream, $this->getQueryPattern(';'));
@@ -17,7 +28,8 @@ class MySqlMultiQueryParser extends BaseMultiQueryParser
 				$patternIterator->setPattern($this->getQueryPattern($match['delimiter']));
 
 			} elseif (isset($match['query']) && $match['query'] !== '') {
-				yield $match['query'];
+				$leadingComments = $this->preserveLeadingComments ? (string) $match['leadingComments'] : '';
+				yield $leadingComments . $match['query'];
 			}
 		}
 	}
@@ -30,12 +42,15 @@ class MySqlMultiQueryParser extends BaseMultiQueryParser
 
 		return /** @lang PhpRegExp */ "
 		~
-			(?:
-					\\s
-				|   /\\* (*PRUNE) (?: [^*]++ | \\*(?!/) )*+  \\*/
-				|   --[^\\n]*+(?:\\n|\\z)
-				|   \\#[^\\n]*+(?:\\n|\\z)
-			)*+
+			\\s*+
+			(?<leadingComments>
+				(?:
+						\\s
+					|   /\\* (*PRUNE) (?: [^*]++ | \\*(?!/) )*+  \\*/
+					|   --[^\\n]*+(?:\\n|\\z)
+					|   \\#[^\\n]*+(?:\\n|\\z)
+				)*+
+			)
 
 			(?:
 				(?i:
