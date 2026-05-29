@@ -13,7 +13,7 @@ class SqliteMultiQueryParser extends BaseMultiQueryParser
 
 		foreach ($patternIterator as $match) {
 			if (isset($match['query']) && $match['query'] !== '') {
-				yield $match['query'];
+				yield $this->buildQuery($match);
 			}
 		}
 	}
@@ -55,7 +55,8 @@ class SqliteMultiQueryParser extends BaseMultiQueryParser
 				)
 			)
 
-			(?&skip)
+			\s*+
+			(?<leadingComments> (?&skip) )
 
 			(?:
 				(?:

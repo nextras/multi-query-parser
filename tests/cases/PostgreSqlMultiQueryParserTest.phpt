@@ -15,9 +15,9 @@ require_once __DIR__ . '/../inc/MultiQueryParserTestCase.php';
 
 class PostgreSqlMultiQueryParserTest extends MultiQueryParserTestCase
 {
-	protected function createParser(): IMultiQueryParser
+	protected function createParser(bool $preserveLeadingComments = false): IMultiQueryParser
 	{
-		return new PostgreSqlMultiQueryParser();
+		return new PostgreSqlMultiQueryParser($preserveLeadingComments);
 	}
 
 

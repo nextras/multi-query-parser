@@ -13,6 +13,17 @@ use function fread;
 abstract class BaseMultiQueryParser implements IMultiQueryParser
 {
 	/**
+	 * @param bool $preserveLeadingComments When true, comments preceding a query are kept as a prefix of
+	 *                                       the yielded query string instead of being stripped. Only pure
+	 *                                       leading whitespace is stripped.
+	 */
+	public function __construct(
+		protected bool $preserveLeadingComments = false,
+	) {
+	}
+
+
+	/**
 	 * @param  positive-int $chunkSize
 	 * @return Iterator<string>
 	 */
@@ -53,6 +64,23 @@ abstract class BaseMultiQueryParser implements IMultiQueryParser
 	 * @return Iterator<string>
 	 */
 	abstract public function parseStringStream(Iterator $stream): Iterator;
+
+
+	/**
+	 * Builds the yielded query string, prepending captured leading comments when enabled.
+	 *
+	 * @param array<mixed> $match
+	 */
+	protected function buildQuery(array $match): string
+	{
+		$query = (string) $match['query'];
+
+		if (!$this->preserveLeadingComments) {
+			return $query;
+		}
+
+		return (string) ($match['leadingComments'] ?? '') . $query;
+	}
 
 
 	/**

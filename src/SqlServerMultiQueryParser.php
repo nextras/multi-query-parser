@@ -13,7 +13,7 @@ class SqlServerMultiQueryParser extends BaseMultiQueryParser
 
 		foreach ($patternIterator as $match) {
 			if (isset($match['query']) && $match['query'] !== '') {
-				yield $match['query'];
+				yield $this->buildQuery($match);
 			}
 		}
 	}
@@ -45,11 +45,14 @@ class SqlServerMultiQueryParser extends BaseMultiQueryParser
 				(?<nestedBc> /\\* (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/ )
 			)
 
-			(?:
-					\\s
-				|   /\\* (*PRUNE) (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/
-				|   -- [^\\n]*+
-			)*+
+			\\s*+
+			(?<leadingComments>
+				(?:
+						\\s
+					|   /\\* (*PRUNE) (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/
+					|   -- [^\\n]*+
+				)*+
+			)
 
 			(?:
 				(?:
