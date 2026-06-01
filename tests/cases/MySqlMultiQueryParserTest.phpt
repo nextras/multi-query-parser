@@ -6,6 +6,9 @@
 
 namespace Nextras\MultiQueryParser;
 
+use Nextras\MultiQueryParser\Fragment\Comment;
+use Nextras\MultiQueryParser\Fragment\Query;
+use Nextras\MultiQueryParser\Strategy\KeepLeadingComments;
 use Tester\Assert;
 
 
@@ -15,9 +18,9 @@ require_once __DIR__ . '/../inc/MultiQueryParserTestCase.php';
 
 class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 {
-	protected function createParser(bool $preserveLeadingComments = false): IMultiQueryParser
+	protected function createParser(?CommentStrategy $commentStrategy = null): IMultiQueryParser
 	{
-		return new MySqlMultiQueryParser($preserveLeadingComments);
+		return new MySqlMultiQueryParser($commentStrategy);
 	}
 
 
@@ -54,7 +57,7 @@ class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 	 */
 	public function testPreserveLeadingCommentsHash(string $content, array $expectedQueries): void
 	{
-		$parser = $this->createParser(preserveLeadingComments: true);
+		$parser = $this->createParser(new KeepLeadingComments());
 		$queries = iterator_to_array($parser->parseString($content));
 		Assert::same($expectedQueries, $queries);
 	}
@@ -84,6 +87,33 @@ class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 			// Hash-comment-only input yields nothing
 			["# only a comment", []],
 		];
+	}
+
+
+	/**
+	 * A comment preceding a DELIMITER directive must still be emitted as a Comment fragment, so
+	 * that a strategy can attach it to the following query instead of the parser dropping it.
+	 */
+	public function testCommentBeforeDelimiterIsEmittedAsFragment(): void
+	{
+		$content = "-- before delimiter\nDELIMITER //\nSELECT 1//";
+
+		$fragments = $this->collectFragments($content);
+		Assert::count(2, $fragments);
+
+		$comment = $fragments[0];
+		Assert::type(Comment::class, $comment);
+		assert($comment instanceof Comment);
+		Assert::same("-- before delimiter\n", $comment->text);
+
+		$query = $fragments[1];
+		Assert::type(Query::class, $query);
+		assert($query instanceof Query);
+		Assert::same('SELECT 1', $query->sql);
+
+		// under KeepLeadingComments the comment attaches to the following query
+		$queries = iterator_to_array($this->createParser(new KeepLeadingComments())->parseString($content));
+		Assert::same(["-- before delimiter\nSELECT 1"], $queries);
 	}
 
 

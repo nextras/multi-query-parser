@@ -7,14 +7,12 @@ use Iterator;
 
 class SqlServerMultiQueryParser extends BaseMultiQueryParser
 {
-	public function parseStringStream(Iterator $stream): Iterator
+	protected function parseStringStreamToFragments(Iterator $stream): Iterator
 	{
 		$patternIterator = new PatternIterator($stream, $this->getQueryPattern());
 
 		foreach ($patternIterator as $match) {
-			if (isset($match['query']) && $match['query'] !== '') {
-				yield $this->buildQuery($match);
-			}
+			yield from $this->buildFragments($match['leadingComments'] ?? null, $match['query'] ?? null);
 		}
 	}
 

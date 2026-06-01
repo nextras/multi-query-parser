@@ -60,12 +60,17 @@ foreach ($parser->parseFileStream($stream) as $query) {
 
 Available parsers: `MySqlMultiQueryParser`, `PostgreSqlMultiQueryParser`, `SqlServerMultiQueryParser`, `SqliteMultiQueryParser`.
 
-**Preserve leading comments:**
+**Keep leading comments:**
 
-By default, comments preceding a query are stripped. Pass `preserveLeadingComments: true` to any parser to keep them as a prefix of the yielded query instead -- useful when comments carry meaningful annotations:
+By default, comments are stripped and only query strings are yielded. To control what happens to
+comments, pass a `CommentStrategy` to the parser constructor. The bundled `KeepLeadingComments`
+strategy keeps the comments preceding a query as a prefix of that query -- useful when comments
+carry meaningful annotations, e.g. so they remain visible in observability tools:
 
 ```php
-$parser = new MySqlMultiQueryParser(preserveLeadingComments: true);
+use Nextras\MultiQueryParser\Strategy\KeepLeadingComments;
+
+$parser = new MySqlMultiQueryParser(new KeepLeadingComments());
 
 $sql = "-- create the users table\nCREATE TABLE users (id INT);";
 
@@ -75,6 +80,35 @@ foreach ($parser->parseString($sql) as $query) {
 ```
 
 All comment styles supported by the given dialect (`--`, `/* */`, and `#` for MySQL) that directly precede a query are preserved with their original formatting; only pure leading whitespace is stripped. A comment that sits between two queries is treated as preceding the following one. Comments not followed by any query (e.g. a trailing comment at the end of input) are dropped.
+
+**Custom comment handling:**
+
+Internally a parser tokenizes the input into a stream of `Query` and `Comment` fragments; the
+`CommentStrategy` collapses that stream into the final query strings. The default `DropComments`
+strategy discards every comment. To implement a different policy (for example, requiring a blank
+line between a comment and its query, or appending trailing comments), implement `CommentStrategy`
+yourself:
+
+```php
+use Iterator;
+use Nextras\MultiQueryParser\CommentStrategy;
+use Nextras\MultiQueryParser\Fragment\Query;
+
+final class MyCommentStrategy implements CommentStrategy
+{
+    public function apply(Iterator $fragments): Iterator
+    {
+        foreach ($fragments as $fragment) {
+            if ($fragment instanceof Query) {
+                yield $fragment->sql;
+            }
+            // decide what to do with Comment fragments
+        }
+    }
+}
+
+$parser = new MySqlMultiQueryParser(new MyCommentStrategy());
+```
 
 ### License
 

@@ -2,15 +2,20 @@
 
 namespace Nextras\MultiQueryParser;
 
+use Iterator;
 use LogicException;
 use Nextras\MultiQueryParser\Exception\RuntimeException;
+use Nextras\MultiQueryParser\Fragment\Comment;
+use Nextras\MultiQueryParser\Fragment\Fragment;
+use Nextras\MultiQueryParser\Fragment\Query;
+use Nextras\MultiQueryParser\Strategy\KeepLeadingComments;
 use Tester\Assert;
 use Tester\TestCase;
 
 
 abstract class MultiQueryParserTestCase extends TestCase
 {
-	abstract protected function createParser(bool $preserveLeadingComments = false): IMultiQueryParser;
+	abstract protected function createParser(?CommentStrategy $commentStrategy = null): IMultiQueryParser;
 
 
 	/**
@@ -89,7 +94,7 @@ abstract class MultiQueryParserTestCase extends TestCase
 	 */
 	public function testPreserveLeadingComments(string $content, array $expectedQueries): void
 	{
-		$parser = $this->createParser(preserveLeadingComments: true);
+		$parser = $this->createParser(new KeepLeadingComments());
 		$queries = iterator_to_array($parser->parseString($content));
 		Assert::same($expectedQueries, $queries);
 	}
@@ -101,7 +106,7 @@ abstract class MultiQueryParserTestCase extends TestCase
 	 */
 	public function testPreserveLeadingCommentsChunkBoundary(): void
 	{
-		$parser = $this->createParser(preserveLeadingComments: true);
+		$parser = $this->createParser(new KeepLeadingComments());
 		$content = implode("\n", [
 			'-- header comment',
 			'-- second line',
@@ -123,6 +128,58 @@ abstract class MultiQueryParserTestCase extends TestCase
 			$queries = iterator_to_array($parser->parseStringStream(new \ArrayIterator($chunks)));
 			Assert::same($expected, $queries, "Failed with chunk boundary at offset $i");
 		}
+	}
+
+
+	/**
+	 * A comment trailing the last query (with no query following it) must still be emitted as a
+	 * Comment fragment by the parser, so that a custom CommentStrategy can act on it. The bundled
+	 * strategies happen to drop it, which is why this has to be asserted at the fragment level
+	 * rather than via the yielded query strings.
+	 */
+	public function testTrailingCommentIsEmittedAsFragment(): void
+	{
+		$fragments = $this->collectFragments("SELECT 1;\n-- trailing");
+		Assert::count(2, $fragments);
+
+		$query = $fragments[0];
+		Assert::type(Query::class, $query);
+		assert($query instanceof Query);
+		Assert::same('SELECT 1', $query->sql);
+
+		$comment = $fragments[1];
+		Assert::type(Comment::class, $comment);
+		assert($comment instanceof Comment);
+		Assert::same('-- trailing', $comment->text);
+	}
+
+
+	/**
+	 * Parses the content and returns the raw Fragment stream the parser emits (before any
+	 * CommentStrategy collapses it), by plugging in a fragment-collecting strategy.
+	 *
+	 * @return list<Fragment>
+	 */
+	protected function collectFragments(string $content): array
+	{
+		$strategy = new class implements CommentStrategy {
+			/** @var list<Fragment> */
+			public array $fragments = [];
+
+
+			public function apply(Iterator $fragments): Iterator
+			{
+				foreach ($fragments as $fragment) {
+					$this->fragments[] = $fragment;
+				}
+
+				yield from [];
+			}
+		};
+
+		iterator_to_array($this->createParser($strategy)->parseString($content));
+
+		return $strategy->fragments;
 	}
 
 
