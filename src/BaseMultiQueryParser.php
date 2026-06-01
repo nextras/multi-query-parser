@@ -65,7 +65,7 @@ abstract class BaseMultiQueryParser implements IMultiQueryParser
 	 * @param  Iterator<string> $stream
 	 * @return Iterator<string>
 	 */
-	final public function parseStringStream(Iterator $stream): Iterator
+	public function parseStringStream(Iterator $stream): Iterator
 	{
 		return $this->commentStrategy->apply($this->parseStringStreamToFragments($stream));
 	}
