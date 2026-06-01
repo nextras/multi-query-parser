@@ -15,8 +15,8 @@ use Nextras\MultiQueryParser\Fragment\Fragment;
 interface CommentStrategy
 {
 	/**
-	 * @param  Iterator<int, Fragment> $fragments
-	 * @return Iterator<int, string>
+	 * @param  Iterator<Fragment> $fragments
+	 * @return Iterator<string>
 	 */
 	public function apply(Iterator $fragments): Iterator;
 }
