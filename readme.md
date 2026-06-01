@@ -81,35 +81,6 @@ foreach ($parser->parseString($sql) as $query) {
 
 All comment styles supported by the given dialect (`--`, `/* */`, and `#` for MySQL) that directly precede a query are preserved with their original formatting; only pure leading whitespace is stripped. A comment that sits between two queries is treated as preceding the following one. Comments not followed by any query (e.g. a trailing comment at the end of input) are dropped.
 
-**Custom comment handling:**
-
-Internally a parser tokenizes the input into a stream of `Query` and `Comment` fragments; the
-`CommentStrategy` collapses that stream into the final query strings. The default `DropComments`
-strategy discards every comment. To implement a different policy (for example, requiring a blank
-line between a comment and its query, or appending trailing comments), implement `CommentStrategy`
-yourself:
-
-```php
-use Iterator;
-use Nextras\MultiQueryParser\CommentStrategy;
-use Nextras\MultiQueryParser\Fragment\Query;
-
-final class MyCommentStrategy implements CommentStrategy
-{
-    public function apply(Iterator $fragments): Iterator
-    {
-        foreach ($fragments as $fragment) {
-            if ($fragment instanceof Query) {
-                yield $fragment->sql;
-            }
-            // decide what to do with Comment fragments
-        }
-    }
-}
-
-$parser = new MySqlMultiQueryParser(new MyCommentStrategy());
-```
-
 ### License
 
 MIT. See full [license](license.md).
