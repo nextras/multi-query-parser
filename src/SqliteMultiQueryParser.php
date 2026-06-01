@@ -7,14 +7,12 @@ use Iterator;
 
 class SqliteMultiQueryParser extends BaseMultiQueryParser
 {
-	public function parseStringStream(Iterator $stream): Iterator
+	protected function parseStringStreamToFragments(Iterator $stream): Iterator
 	{
 		$patternIterator = new PatternIterator($stream, $this->getQueryPattern());
 
 		foreach ($patternIterator as $match) {
-			if (isset($match['query']) && $match['query'] !== '') {
-				yield $match['query'];
-			}
+			yield from $this->buildFragments($match['leadingComments'] ?? null, $match['query'] ?? null);
 		}
 	}
 
@@ -55,7 +53,8 @@ class SqliteMultiQueryParser extends BaseMultiQueryParser
 				)
 			)
 
-			(?&skip)
+			\s*+
+			(?<leadingComments> (?&skip) )
 
 			(?:
 				(?:

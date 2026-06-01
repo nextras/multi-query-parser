@@ -60,6 +60,27 @@ foreach ($parser->parseFileStream($stream) as $query) {
 
 Available parsers: `MySqlMultiQueryParser`, `PostgreSqlMultiQueryParser`, `SqlServerMultiQueryParser`, `SqliteMultiQueryParser`.
 
+**Keep leading comments:**
+
+By default, comments are stripped and only query strings are yielded. To control what happens to
+comments, pass a `CommentStrategy` to the parser constructor. The bundled `PrependLeadingComments`
+strategy keeps the comments preceding a query as a prefix of that query -- useful when comments
+carry meaningful annotations, e.g. so they remain visible in observability tools:
+
+```php
+use Nextras\MultiQueryParser\Strategy\PrependLeadingComments;
+
+$parser = new MySqlMultiQueryParser(new PrependLeadingComments());
+
+$sql = "-- create the users table\nCREATE TABLE users (id INT);";
+
+foreach ($parser->parseString($sql) as $query) {
+    echo $query; // "-- create the users table\nCREATE TABLE users (id INT)"
+}
+```
+
+All comment styles supported by the given dialect (`--`, `/* */`, and `#` for MySQL) that directly precede a query are preserved with their original formatting; only pure leading whitespace is stripped. A comment that sits between two queries is treated as preceding the following one. Comments not followed by any query (e.g. a trailing comment at the end of input) are dropped.
+
 ### License
 
 MIT. See full [license](license.md).

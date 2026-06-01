@@ -6,6 +6,9 @@
 
 namespace Nextras\MultiQueryParser;
 
+use Nextras\MultiQueryParser\Fragment\Comment;
+use Nextras\MultiQueryParser\Fragment\Query;
+use Nextras\MultiQueryParser\Strategy\PrependLeadingComments;
 use Tester\Assert;
 
 
@@ -15,9 +18,9 @@ require_once __DIR__ . '/../inc/MultiQueryParserTestCase.php';
 
 class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 {
-	protected function createParser(): IMultiQueryParser
+	protected function createParser(?CommentStrategy $commentStrategy = null): IMultiQueryParser
 	{
-		return new MySqlMultiQueryParser();
+		return new MySqlMultiQueryParser($commentStrategy);
 	}
 
 
@@ -42,6 +45,75 @@ class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 		$parser = $this->createParser();
 		$queries = iterator_to_array($parser->parseString($content));
 		Assert::same($expectedQueries, $queries);
+	}
+
+
+	/**
+	 * MySQL-specific leading-comment cases: # hash comments. The generic line- and
+	 * block-comment cases are covered by the shared test in MultiQueryParserTestCase.
+	 *
+	 * @dataProvider providePreserveLeadingCommentsHashData
+	 * @param list<string> $expectedQueries
+	 */
+	public function testPreserveLeadingCommentsHash(string $content, array $expectedQueries): void
+	{
+		$parser = $this->createParser(new PrependLeadingComments());
+		$queries = iterator_to_array($parser->parseString($content));
+		Assert::same($expectedQueries, $queries);
+	}
+
+
+	/**
+	 * @return list<array{string, list<string>}>
+	 */
+	protected function providePreserveLeadingCommentsHashData(): array
+	{
+		return [
+			// # hash comments are preserved as a prefix
+			[
+				"# hash note\nSELECT 1;",
+				["# hash note\nSELECT 1"],
+			],
+			// All three comment styles mixed, with original formatting preserved
+			[
+				"-- a\n# b\n/* c */\nSELECT 1;",
+				["-- a\n# b\n/* c */\nSELECT 1"],
+			],
+			// A hash comment between two queries attaches to the following query
+			[
+				"SELECT 1; # between\nSELECT 2;",
+				["SELECT 1", "# between\nSELECT 2"],
+			],
+			// Hash-comment-only input yields nothing
+			["# only a comment", []],
+		];
+	}
+
+
+	/**
+	 * A comment preceding a DELIMITER directive must still be emitted as a Comment fragment, so
+	 * that a strategy can attach it to the following query instead of the parser dropping it.
+	 */
+	public function testCommentBeforeDelimiterIsEmittedAsFragment(): void
+	{
+		$content = "-- before delimiter\nDELIMITER //\nSELECT 1//";
+
+		$fragments = $this->collectFragments($content);
+		Assert::count(2, $fragments);
+
+		$comment = $fragments[0];
+		Assert::type(Comment::class, $comment);
+		assert($comment instanceof Comment);
+		Assert::same("-- before delimiter\n", $comment->text);
+
+		$query = $fragments[1];
+		Assert::type(Query::class, $query);
+		assert($query instanceof Query);
+		Assert::same('SELECT 1', $query->sql);
+
+		// under PrependLeadingComments the comment attaches to the following query
+		$queries = iterator_to_array($this->createParser(new PrependLeadingComments())->parseString($content));
+		Assert::same(["-- before delimiter\nSELECT 1"], $queries);
 	}
 
 

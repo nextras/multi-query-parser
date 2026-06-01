@@ -30,7 +30,7 @@ use function substr;
  * the regex engine commits to the construct — if the closing delimiter is missing (because
  * it is in a later chunk), the overall match fails, causing the iterator to load more data.
  *
- * @implements IteratorAggregate<int, array<mixed>>
+ * @implements IteratorAggregate<int, array<array-key, string>>
  */
 class PatternIterator implements IteratorAggregate
 {

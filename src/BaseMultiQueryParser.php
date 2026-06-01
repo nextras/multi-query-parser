@@ -5,6 +5,10 @@ namespace Nextras\MultiQueryParser;
 use ArrayIterator;
 use Iterator;
 use Nextras\MultiQueryParser\Exception\RuntimeException;
+use Nextras\MultiQueryParser\Fragment\Comment;
+use Nextras\MultiQueryParser\Fragment\Fragment;
+use Nextras\MultiQueryParser\Fragment\Query;
+use Nextras\MultiQueryParser\Strategy\DropComments;
 use function feof;
 use function fopen;
 use function fread;
@@ -12,6 +16,15 @@ use function fread;
 
 abstract class BaseMultiQueryParser implements IMultiQueryParser
 {
+	private CommentStrategy $commentStrategy;
+
+
+	public function __construct(?CommentStrategy $commentStrategy = null)
+	{
+		$this->commentStrategy = $commentStrategy ?? new DropComments();
+	}
+
+
 	/**
 	 * @param  positive-int $chunkSize
 	 * @return Iterator<string>
@@ -52,7 +65,32 @@ abstract class BaseMultiQueryParser implements IMultiQueryParser
 	 * @param  Iterator<string> $stream
 	 * @return Iterator<string>
 	 */
-	abstract public function parseStringStream(Iterator $stream): Iterator;
+	public function parseStringStream(Iterator $stream): Iterator
+	{
+		return $this->commentStrategy->apply($this->parseStringStreamToFragments($stream));
+	}
+
+
+	/**
+	 * @param  Iterator<string> $stream
+	 * @return Iterator<Fragment>
+	 */
+	abstract protected function parseStringStreamToFragments(Iterator $stream): Iterator;
+
+
+	/**
+	 * @return Iterator<Fragment>
+	 */
+	protected function buildFragments(?string $leadingComments, ?string $query): Iterator
+	{
+		if ($leadingComments !== null && $leadingComments !== '') {
+			yield new Comment($leadingComments);
+		}
+
+		if ($query !== null && $query !== '') {
+			yield new Query($query);
+		}
+	}
 
 
 	/**

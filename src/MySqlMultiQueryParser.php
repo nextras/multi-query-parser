@@ -8,16 +8,15 @@ use function preg_quote;
 
 class MySqlMultiQueryParser extends BaseMultiQueryParser
 {
-	public function parseStringStream(Iterator $stream): Iterator
+	protected function parseStringStreamToFragments(Iterator $stream): Iterator
 	{
 		$patternIterator = new PatternIterator($stream, $this->getQueryPattern(';'));
 
 		foreach ($patternIterator as $match) {
+			yield from $this->buildFragments($match['leadingComments'] ?? null, $match['query'] ?? null);
+
 			if (isset($match['delimiter']) && $match['delimiter'] !== '') {
 				$patternIterator->setPattern($this->getQueryPattern($match['delimiter']));
-
-			} elseif (isset($match['query']) && $match['query'] !== '') {
-				yield $match['query'];
 			}
 		}
 	}
@@ -30,12 +29,15 @@ class MySqlMultiQueryParser extends BaseMultiQueryParser
 
 		return /** @lang PhpRegExp */ "
 		~
-			(?:
-					\\s
-				|   /\\* (*PRUNE) (?: [^*]++ | \\*(?!/) )*+  \\*/
-				|   --[^\\n]*+(?:\\n|\\z)
-				|   \\#[^\\n]*+(?:\\n|\\z)
-			)*+
+			\\s*+
+			(?<leadingComments>
+				(?:
+						\\s
+					|   /\\* (*PRUNE) (?: [^*]++ | \\*(?!/) )*+  \\*/
+					|   --[^\\n]*+(?:\\n|\\z)
+					|   \\#[^\\n]*+(?:\\n|\\z)
+				)*+
+			)
 
 			(?:
 				(?i:

@@ -7,14 +7,12 @@ use Iterator;
 
 class PostgreSqlMultiQueryParser extends BaseMultiQueryParser
 {
-	public function parseStringStream(Iterator $stream): Iterator
+	protected function parseStringStreamToFragments(Iterator $stream): Iterator
 	{
 		$patternIterator = new PatternIterator($stream, $this->getQueryPattern());
 
 		foreach ($patternIterator as $match) {
-			if (isset($match['query']) && $match['query'] !== '') {
-				yield $match['query'];
-			}
+			yield from $this->buildFragments($match['leadingComments'] ?? null, $match['query'] ?? null);
 		}
 	}
 
@@ -29,11 +27,14 @@ class PostgreSqlMultiQueryParser extends BaseMultiQueryParser
 				(?<nestedBc> /\\* (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/ )
 			)
 
-			(?:
-					\\s
-				|   /\\* (*PRUNE) (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/
-				|   -- [^\\n]*+
-			)*+
+			\\s*+
+			(?<leadingComments>
+				(?:
+						\\s
+					|   /\\* (*PRUNE) (?: [^/*]++ | /(?!\\*) | \\*(?!/) | (?&nestedBc) )*+ \\*/
+					|   -- [^\\n]*+
+				)*+
+			)
 
 			(?:
 				(?:

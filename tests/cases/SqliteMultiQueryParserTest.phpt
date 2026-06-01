@@ -15,9 +15,9 @@ require_once __DIR__ . '/../inc/MultiQueryParserTestCase.php';
 
 class SqliteMultiQueryParserTest extends MultiQueryParserTestCase
 {
-	protected function createParser(): IMultiQueryParser
+	protected function createParser(?CommentStrategy $commentStrategy = null): IMultiQueryParser
 	{
-		return new SqliteMultiQueryParser();
+		return new SqliteMultiQueryParser($commentStrategy);
 	}
 
 
