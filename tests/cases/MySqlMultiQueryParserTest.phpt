@@ -8,7 +8,7 @@ namespace Nextras\MultiQueryParser;
 
 use Nextras\MultiQueryParser\Fragment\Comment;
 use Nextras\MultiQueryParser\Fragment\Query;
-use Nextras\MultiQueryParser\Strategy\KeepLeadingComments;
+use Nextras\MultiQueryParser\Strategy\PrependLeadingComments;
 use Tester\Assert;
 
 
@@ -57,7 +57,7 @@ class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 	 */
 	public function testPreserveLeadingCommentsHash(string $content, array $expectedQueries): void
 	{
-		$parser = $this->createParser(new KeepLeadingComments());
+		$parser = $this->createParser(new PrependLeadingComments());
 		$queries = iterator_to_array($parser->parseString($content));
 		Assert::same($expectedQueries, $queries);
 	}
@@ -111,8 +111,8 @@ class MySqlMultiQueryParserTest extends MultiQueryParserTestCase
 		assert($query instanceof Query);
 		Assert::same('SELECT 1', $query->sql);
 
-		// under KeepLeadingComments the comment attaches to the following query
-		$queries = iterator_to_array($this->createParser(new KeepLeadingComments())->parseString($content));
+		// under PrependLeadingComments the comment attaches to the following query
+		$queries = iterator_to_array($this->createParser(new PrependLeadingComments())->parseString($content));
 		Assert::same(["-- before delimiter\nSELECT 1"], $queries);
 	}
 

@@ -63,14 +63,14 @@ Available parsers: `MySqlMultiQueryParser`, `PostgreSqlMultiQueryParser`, `SqlSe
 **Keep leading comments:**
 
 By default, comments are stripped and only query strings are yielded. To control what happens to
-comments, pass a `CommentStrategy` to the parser constructor. The bundled `KeepLeadingComments`
+comments, pass a `CommentStrategy` to the parser constructor. The bundled `PrependLeadingComments`
 strategy keeps the comments preceding a query as a prefix of that query -- useful when comments
 carry meaningful annotations, e.g. so they remain visible in observability tools:
 
 ```php
-use Nextras\MultiQueryParser\Strategy\KeepLeadingComments;
+use Nextras\MultiQueryParser\Strategy\PrependLeadingComments;
 
-$parser = new MySqlMultiQueryParser(new KeepLeadingComments());
+$parser = new MySqlMultiQueryParser(new PrependLeadingComments());
 
 $sql = "-- create the users table\nCREATE TABLE users (id INT);";
 

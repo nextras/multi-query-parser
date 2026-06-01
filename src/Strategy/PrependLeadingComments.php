@@ -14,7 +14,7 @@ use Nextras\MultiQueryParser\Fragment\Query;
  * Comments not followed by any query (e.g. a trailing comment at the end of input) are dropped,
  * since there is no query to attach them to.
  */
-final class KeepLeadingComments implements CommentStrategy
+final class PrependLeadingComments implements CommentStrategy
 {
 	public function apply(Iterator $fragments): Iterator
 	{

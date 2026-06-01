@@ -11,7 +11,7 @@ use Nextras\MultiQueryParser\Fragment\Comment;
 use Nextras\MultiQueryParser\Fragment\Fragment;
 use Nextras\MultiQueryParser\Fragment\Query;
 use Nextras\MultiQueryParser\Strategy\DropComments;
-use Nextras\MultiQueryParser\Strategy\KeepLeadingComments;
+use Nextras\MultiQueryParser\Strategy\PrependLeadingComments;
 use Tester\Assert;
 use Tester\TestCase;
 
@@ -35,9 +35,9 @@ class CommentStrategyTest extends TestCase
 	}
 
 
-	public function testKeepLeadingCommentsPrependsComments(): void
+	public function testPrependLeadingComments(): void
 	{
-		$result = $this->apply(new KeepLeadingComments(), [
+		$result = $this->apply(new PrependLeadingComments(), [
 			new Comment("-- a\n"),
 			new Query('SELECT 1'),
 			new Comment("-- b\n"),
@@ -48,9 +48,9 @@ class CommentStrategyTest extends TestCase
 	}
 
 
-	public function testKeepLeadingCommentsWithoutComments(): void
+	public function testPrependLeadingCommentsWithoutComments(): void
 	{
-		$result = $this->apply(new KeepLeadingComments(), [
+		$result = $this->apply(new PrependLeadingComments(), [
 			new Query('SELECT 1'),
 			new Query('SELECT 2'),
 		]);
@@ -59,9 +59,9 @@ class CommentStrategyTest extends TestCase
 	}
 
 
-	public function testKeepLeadingCommentsDropsTrailingComment(): void
+	public function testPrependLeadingCommentsDropsTrailingComment(): void
 	{
-		$result = $this->apply(new KeepLeadingComments(), [
+		$result = $this->apply(new PrependLeadingComments(), [
 			new Query('SELECT 1'),
 			new Comment('-- trailing'),
 		]);

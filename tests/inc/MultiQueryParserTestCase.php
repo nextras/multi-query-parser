@@ -8,7 +8,7 @@ use Nextras\MultiQueryParser\Exception\RuntimeException;
 use Nextras\MultiQueryParser\Fragment\Comment;
 use Nextras\MultiQueryParser\Fragment\Fragment;
 use Nextras\MultiQueryParser\Fragment\Query;
-use Nextras\MultiQueryParser\Strategy\KeepLeadingComments;
+use Nextras\MultiQueryParser\Strategy\PrependLeadingComments;
 use Tester\Assert;
 use Tester\TestCase;
 
@@ -94,7 +94,7 @@ abstract class MultiQueryParserTestCase extends TestCase
 	 */
 	public function testPreserveLeadingComments(string $content, array $expectedQueries): void
 	{
-		$parser = $this->createParser(new KeepLeadingComments());
+		$parser = $this->createParser(new PrependLeadingComments());
 		$queries = iterator_to_array($parser->parseString($content));
 		Assert::same($expectedQueries, $queries);
 	}
@@ -106,7 +106,7 @@ abstract class MultiQueryParserTestCase extends TestCase
 	 */
 	public function testPreserveLeadingCommentsChunkBoundary(): void
 	{
-		$parser = $this->createParser(new KeepLeadingComments());
+		$parser = $this->createParser(new PrependLeadingComments());
 		$content = implode("\n", [
 			'-- header comment',
 			'-- second line',
