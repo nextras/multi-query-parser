@@ -24,9 +24,9 @@
 	},
 	"require-dev": {
 		"nette/tester": "^2.6",
-		"phpstan/phpstan": "2.1.54",
+		"phpstan/phpstan": "2.2.1",
 		"phpstan/extension-installer": "1.4.3",
-		"phpstan/phpstan-strict-rules": "2.0.10"
+		"phpstan/phpstan-strict-rules": "2.0.11"
 	},
 	"autoload": {
 		"psr-4": {
